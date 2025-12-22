@@ -15,9 +15,12 @@ $data = json_decode(file_get_contents("php://input"), true);
 $phone    = $data["phone"] ?? "";
 $password = $data["password"] ?? "";
 
+// بدلاً من http_response_code(400)
 if (!$phone || !$password) {
-    http_response_code(400);
-    echo json_encode(["message" => "Mobile number and password required"]);
+    echo json_encode([
+        "status" => "error", 
+        "message" => "Mobile number and password required"
+    ]);
     exit;
 }
 
@@ -27,21 +30,27 @@ try {
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user && password_verify($password, $user["password"])) {
-        http_response_code(200);
+        // حالة النجاح (ستبقى كما هي)
         echo json_encode([
             "status" => "success",
             "message" => "Login successful",
             "user" => [
                 "id" => $user["id"],
-                "name" => $user["full_name"], // تم الربط مع حقل full_name من القاعدة
-                "balance" => $user["balance"] ?? 0
+                "name" => $user["full_name"],
+                "balance" => $user["balance"] ?? 0,
+                "role" => $user["role"]
             ]
         ]);
     } else {
-        http_response_code(401);
-        echo json_encode(["status" => "error", "message" => "Incorrect login details"]);
+        // تم إلغاء http_response_code(401) لضمان أن res.ok في الفرونت اند لا تفشل
+        echo json_encode([
+            "status" => "error", 
+            "message" => "Incorrect login details"
+        ]);
     }
 } catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(["status" => "error", "message" => "Server error"]);
+    echo json_encode([
+        "status" => "error", 
+        "message" => "Server error"
+    ]);
 }

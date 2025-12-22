@@ -45,17 +45,15 @@ export default function BillPaymentPage() {
   }, [statusMsg]);
 
   const getUserId = () => {
-    const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser).id : null;
+    if (typeof window !== "undefined") {
+      const savedUser = localStorage.getItem("user");
+      return savedUser ? JSON.parse(savedUser).id : null;
+    }
+    return null;
   };
 
   const services = [
-    {
-      id: "electricity",
-      icon: Lightbulb,
-      label: "Electricity",
-      color: "text-yellow-500",
-    },
+    { id: "electricity", icon: Lightbulb, label: "Electricity", color: "text-yellow-500" },
     { id: "water", icon: Droplet, label: "Water", color: "text-blue-500" },
     { id: "mobile", icon: Phone, label: "Mobile", color: "text-green-500" },
     { id: "internet", icon: Wifi, label: "Internet", color: "text-purple-500" },
@@ -67,13 +65,12 @@ export default function BillPaymentPage() {
     const id = getUserId();
     if (!id) return;
     try {
-      const res = await fetch(
-        `http://localhost/instapay-backend/auth/get_user.php?id=${id}`
-      );
+      const res = await fetch(`http://localhost/instapay-backend/auth/get_user.php?id=${id}`);
+      if (!res.ok) throw new Error();
       const data = await res.json();
       if (data.status === "success") setUserBalance(Number(data.user.balance));
     } catch (err) {
-      console.error("Failed to fetch balance");
+      console.warn("Could not sync balance with server");
     }
   }, []);
 
@@ -81,15 +78,14 @@ export default function BillPaymentPage() {
     const id = getUserId();
     if (!id) return;
     try {
-      const res = await fetch(
-        `http://localhost/instapay-backend/auth/get_bills.php?user_id=${id}`
-      );
+      const res = await fetch(`http://localhost/instapay-backend/auth/get_bills.php?user_id=${id}`);
+      if (!res.ok) throw new Error();
       const data = await res.json();
       if (data.status === "success") {
-        setRecentBills(data.bills);
+        setRecentBills(data.bills || []);
       }
     } catch (err) {
-      console.error("Failed to fetch bills");
+      console.warn("Could not sync bills with server");
     }
   }, []);
 
@@ -102,20 +98,17 @@ export default function BillPaymentPage() {
     const billId = showConfirm.billId;
     if (!billId) return;
     try {
-      const res = await fetch(
-        "http://localhost/instapay-backend/auth/delete_bill.php",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ bill_id: billId }),
-        }
-      );
+      const res = await fetch("http://localhost/instapay-backend/auth/delete_bill.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bill_id: billId }),
+      });
       const data = await res.json();
       if (data.status === "success") {
         setStatusMsg({ type: "success", text: "Record removed from history" });
-        fetchRecentBills(); // تحديث القائمة فوراً
+        fetchRecentBills();
       } else {
-        setStatusMsg({ type: "error", text: data.message });
+        setStatusMsg({ type: "error", text: data.message || "Delete failed" });
       }
     } catch (err) {
       setStatusMsg({ type: "error", text: "Connection error" });
@@ -137,19 +130,16 @@ export default function BillPaymentPage() {
 
     setLoading(true);
     try {
-      const response = await fetch(
-        "http://localhost/instapay-backend/auth/pay_bill.php",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            user_id: userId,
-            amount: amount,
-            service: selectedService,
-            meter: accountNumber,
-          }),
-        }
-      );
+      const response = await fetch("http://localhost/instapay-backend/auth/pay_bill.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          amount: amount,
+          service: selectedService,
+          meter: accountNumber,
+        }),
+      });
 
       const data = await response.json();
       if (data.status === "success") {
@@ -159,10 +149,10 @@ export default function BillPaymentPage() {
         fetchBalance();
         fetchRecentBills();
       } else {
-        setStatusMsg({ type: "error", text: data.message });
+        setStatusMsg({ type: "error", text: data.message || "Payment declined by server" });
       }
     } catch (error) {
-      setStatusMsg({ type: "error", text: "Payment failed." });
+      setStatusMsg({ type: "error", text: "Connection error. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -174,16 +164,10 @@ export default function BillPaymentPage() {
       {statusMsg && (
         <div
           className={`fixed top-10 right-10 z-[100] p-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-in slide-in-from-right duration-500 border-l-4 ${
-            statusMsg.type === "success"
-              ? "bg-white border-green-500"
-              : "bg-white border-red-500"
+            statusMsg.type === "success" ? "bg-white border-green-500" : "bg-white border-red-500"
           }`}
         >
-          <div
-            className={`p-2 rounded-full ${
-              statusMsg.type === "success" ? "bg-green-100" : "bg-red-100"
-            }`}
-          >
+          <div className={`p-2 rounded-full ${statusMsg.type === "success" ? "bg-green-100" : "bg-red-100"}`}>
             {statusMsg.type === "success" ? (
               <CheckCircle className="w-5 h-5 text-green-600" />
             ) : (
@@ -196,10 +180,7 @@ export default function BillPaymentPage() {
             </p>
             <p className="text-sm text-gray-500 font-bold">{statusMsg.text}</p>
           </div>
-          <button
-            onClick={() => setStatusMsg(null)}
-            className="ml-2 text-gray-300 hover:text-gray-600"
-          >
+          <button onClick={() => setStatusMsg(null)} className="ml-2 text-gray-300 hover:text-gray-600">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -216,12 +197,8 @@ export default function BillPaymentPage() {
             <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-500">
               <AlertTriangle className="w-8 h-8" />
             </div>
-            <h3 className="text-xl font-black text-gray-900 mb-2 italic">
-              Remove Activity
-            </h3>
-            <p className="text-gray-500 font-medium mb-8">
-              Delete this bill record from your history?
-            </p>
+            <h3 className="text-xl font-black text-gray-900 mb-2 italic">Remove Activity</h3>
+            <p className="text-gray-500 font-medium mb-8">Delete this bill record from your history?</p>
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={() => setShowConfirm({ show: false, billId: null })}
@@ -258,9 +235,7 @@ export default function BillPaymentPage() {
                   Bills
                 </span>
               </h1>
-              <p className="text-gray-500 font-medium">
-                Fast, secure and instant utility payments.
-              </p>
+              <p className="text-gray-500 font-medium">Fast, secure and instant utility payments.</p>
             </header>
 
             {/* Balance Card */}
@@ -270,9 +245,7 @@ export default function BillPaymentPage() {
               </p>
               <h3 className="text-4xl font-black">
                 {userBalance.toLocaleString()}{" "}
-                <span className="text-lg font-medium opacity-70 italic">
-                  EGP
-                </span>
+                <span className="text-lg font-medium opacity-70 italic">EGP</span>
               </h3>
               <div className="mt-6 flex items-center gap-2 bg-white/20 backdrop-blur-md w-fit px-4 py-2 rounded-xl border border-white/30">
                 <CheckCircle className="w-4 h-4 text-white" />
@@ -304,16 +277,12 @@ export default function BillPaymentPage() {
                   >
                     <service.icon
                       className={`w-7 h-7 ${
-                        selectedService === service.id
-                          ? service.color
-                          : "text-gray-300"
+                        selectedService === service.id ? service.color : "text-gray-300"
                       }`}
                     />
                     <span
                       className={`text-[10px] font-black uppercase tracking-widest ${
-                        selectedService === service.id
-                          ? "text-purple-700"
-                          : "text-gray-500"
+                        selectedService === service.id ? "text-purple-700" : "text-gray-500"
                       }`}
                     >
                       {service.label}
@@ -352,9 +321,7 @@ export default function BillPaymentPage() {
                       onChange={(e) => setAmount(e.target.value)}
                       className="bg-transparent flex-1 outline-none text-2xl font-black text-gray-800 tracking-tighter"
                     />
-                    <span className="font-black text-purple-600 italic">
-                      EGP
-                    </span>
+                    <span className="font-black text-purple-600 italic">EGP</span>
                   </div>
                 </div>
 
@@ -401,15 +368,12 @@ export default function BillPaymentPage() {
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          onClick={() =>
-                            setShowConfirm({ show: true, billId: bill.id })
-                          }
+                          onClick={() => setShowConfirm({ show: true, billId: bill.id })}
                           className="p-2 bg-white text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition-all shadow-sm"
                         >
                           <Trash2 className="w-4 h-4" />
                         </div>
                         <div>
-                          {/* تعديل: التأكد من قراءة service_name و تنسيق التاريخ الصحيح */}
                           <p className="text-[12px] font-black text-gray-700 capitalize italic tracking-tight">
                             {bill.service_name || "Utility Bill"}
                           </p>

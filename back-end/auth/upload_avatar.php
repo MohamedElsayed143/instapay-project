@@ -1,48 +1,45 @@
 <?php
-header("Access-Control-Allow-Origin: http://localhost:3000");
+header("Access-Control-Allow-Origin: *"); // للسماح بالرفع من أي مكان أثناء التطوير
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
-header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
 require_once "../config/db.php";
 
-// التأكد من وجود ملف ومعرف مستخدم
 if (!isset($_FILES['avatar']) || !isset($_POST['user_id'])) {
-    echo json_encode(["status" => "error", "message" => "Missing data"]);
+    echo json_encode(["status" => "error", "message" => "Missing file or user ID"]);
     exit;
 }
 
 $userId = $_POST['user_id'];
-$file = $_FILES['avatar'];
-$uploadDir = "../uploads/avatars/";
+// اجعل المسار داخل مجلد public في الـ backend أو مجلد يمكن الوصول إليه عبر URL
+$uploadDir = "../uploads/avatars/"; 
 
-// إنشاء المجلد إذا لم يكن موجوداً
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0777, true);
 }
 
-$fileName = time() . "_" . basename($file["name"]);
-$targetFilePath = $uploadDir . $fileName;
-$fileType = pathinfo($targetFilePath, PATHINFO_EXTENSION);
+$file = $_FILES['avatar'];
+$ext = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
+$newFileName = "avatar_" . $userId . "_" . time() . "." . $ext;
+$targetPath = $uploadDir . $newFileName;
 
-// التحقق من نوع الملف
-$allowTypes = array('jpg', 'png', 'jpeg', 'gif');
-if (in_array(strtolower($fileType), $allowTypes)) {
-    if (move_uploaded_file($file["tmp_name"], $targetFilePath)) {
-        // تحديث قاعدة البيانات برابط الصورة النسبي
-        $avatarUrl = "auth/uploads/avatars/" . $fileName; // عدل المسار حسب إعدادات السيرفر
+$allowed = ['jpg', 'jpeg', 'png', 'gif'];
+
+if (in_array($ext, $allowed)) {
+    if (move_uploaded_file($file["tmp_name"], $targetPath)) {
+        // تحديث قاعدة البيانات باسم الملف فقط
         $stmt = $pdo->prepare("UPDATE users SET avatar = ? WHERE id = ?");
-        $stmt->execute([$fileName, $userId]);
+        $stmt->execute([$newFileName, $userId]);
 
         echo json_encode([
-            "status" => "success", 
-            "message" => "Upload successful",
-            "avatar" => $fileName
+            "status" => "success",
+            "message" => "Avatar updated",
+            "avatar" => $newFileName
         ]);
     } else {
-        echo json_encode(["status" => "error", "message" => "Failed to move file"]);
+        echo json_encode(["status" => "error", "message" => "Upload failed"]);
     }
 } else {
     echo json_encode(["status" => "error", "message" => "Invalid file type"]);

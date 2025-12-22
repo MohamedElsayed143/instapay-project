@@ -24,13 +24,11 @@ interface UserData {
   full_name: string;
   phone: string;
   balance: string | number;
-  avatar?: string; // إضافة حقل الصورة
+  avatar?: string;
 }
 
 export default function ManageAccountsPage() {
-  const [activeTab, setActiveTab] = useState<"accounts" | "profile">(
-    "accounts"
-  );
+  const [activeTab, setActiveTab] = useState<"accounts" | "profile">("accounts");
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -73,37 +71,6 @@ export default function ManageAccountsPage() {
     }
   }, []);
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-
-    const formData = new FormData();
-    formData.append("avatar", file);
-    formData.append("user_id", user.id);
-
-    setUpdating(true);
-    try {
-      const response = await fetch(
-        "http://localhost/instapay-backend/auth/upload_avatar.php",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-      const data = await response.json();
-      if (data.status === "success") {
-        showToast("success", "Profile picture updated!");
-        fetchUserData(user.id); // تحديث البيانات لعرض الصورة الجديدة
-      } else {
-        showToast("error", data.message);
-      }
-    } catch {
-      showToast("error", "Upload failed");
-    } finally {
-      setUpdating(false);
-    }
-  };
-
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
@@ -118,6 +85,37 @@ export default function ManageAccountsPage() {
       window.location.href = "/login";
     }
   }, [fetchUserData]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+    formData.append("user_id", user.id);
+
+    setUpdating(true);
+    try {
+      const response = await fetch(
+        "http://localhost/instapay-backend/auth/upload_avatar.php",
+        {
+          method: "POST",
+          body: formData, // لا نضع headers لـ FormData المتصفح يضعها تلقائياً
+        }
+      );
+      const data = await response.json();
+      if (data.status === "success") {
+        showToast("success", "Profile picture updated!");
+        fetchUserData(user.id);
+      } else {
+        showToast("error", data.message);
+      }
+    } catch {
+      showToast("error", "Upload failed - Server error");
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   const handleUpdateName = async () => {
     if (!newName || newName === user?.full_name) return;
@@ -149,7 +147,8 @@ export default function ManageAccountsPage() {
 
   const handleChangePassword = async () => {
     if (!oldPassword || !newPassword)
-      return showToast("error", "Fields required");
+      return showToast("error", "All fields are required");
+    
     setUpdating(true);
     try {
       const response = await fetch(
@@ -259,7 +258,6 @@ export default function ManageAccountsPage() {
 
         <div className="grid lg:grid-cols-3 gap-10">
           <div className="lg:col-span-1">
-            {/* تكبير الكارد الجانبي وإضافة رفع الصورة */}
             <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center text-center">
               <div
                 className="relative group cursor-pointer"
@@ -271,9 +269,16 @@ export default function ManageAccountsPage() {
                       src={`http://localhost/instapay-backend/uploads/avatars/${user.avatar}`}
                       alt="Profile"
                       className="w-full h-full object-cover"
+                      // منع التخزين المؤقت للصورة القديمة عند التحديث
+                      key={user.avatar} 
                     />
                   ) : (
                     <User className="w-16 h-16" />
+                  )}
+                  {updating && (
+                    <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                       <RefreshCw className="animate-spin text-purple-600" />
+                    </div>
                   )}
                 </div>
                 <div className="absolute bottom-4 right-0 bg-slate-900 text-white p-2 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
@@ -365,9 +370,9 @@ export default function ManageAccountsPage() {
                       <button
                         onClick={handleUpdateName}
                         disabled={updating}
-                        className="bg-slate-900 text-white px-8 rounded-2xl font-bold hover:bg-purple-600 transition-all"
+                        className="bg-slate-900 text-white px-8 rounded-2xl font-bold hover:bg-purple-600 transition-all disabled:opacity-50"
                       >
-                        {updating ? "..." : "Save"}
+                        {updating ? "Saving..." : "Save"}
                       </button>
                     </div>
                   </section>
@@ -383,18 +388,13 @@ export default function ManageAccountsPage() {
                         placeholder="Current Password"
                         value={oldPassword}
                         onChange={(e) => setOldPassword(e.target.value)}
-                        autoComplete="new-password"
                         className="bg-transparent w-full outline-none font-bold text-slate-700 pr-10"
                       />
                       <button
                         onClick={() => setShowOldPass(!showOldPass)}
                         className="absolute right-4 text-slate-400"
                       >
-                        {showOldPass ? (
-                          <EyeOff className="w-5 h-5" />
-                        ) : (
-                          <Eye className="w-5 h-5" />
-                        )}
+                        {showOldPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
                     <div className="relative bg-slate-50 border border-slate-100 p-4 rounded-2xl focus-within:bg-white transition-all flex items-center">
@@ -404,26 +404,21 @@ export default function ManageAccountsPage() {
                         placeholder="New Password"
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
-                        autoComplete="new-password"
                         className="bg-transparent w-full outline-none font-bold text-slate-700 pr-10"
                       />
                       <button
                         onClick={() => setShowNewPass(!showNewPass)}
                         className="absolute right-4 text-slate-400"
                       >
-                        {showNewPass ? (
-                          <EyeOff className="w-5 h-5" />
-                        ) : (
-                          <Eye className="w-5 h-5" />
-                        )}
+                        {showNewPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
                     <button
                       onClick={handleChangePassword}
                       disabled={updating}
-                      className="w-full bg-purple-600 text-white py-4 rounded-2xl font-black shadow-lg hover:shadow-purple-100 transition-all"
+                      className="w-full bg-purple-600 text-white py-4 rounded-2xl font-black shadow-lg hover:shadow-purple-100 transition-all disabled:opacity-50"
                     >
-                      Update Password
+                      {updating ? "Updating..." : "Update Password"}
                     </button>
                   </section>
                 </div>

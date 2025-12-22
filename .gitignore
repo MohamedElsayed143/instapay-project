@@ -12,3 +12,6 @@ vendor/
 
 # OS
 .DS_Store
+
+# Backend uploads
+back-end/uploads/
