@@ -32,7 +32,7 @@ const Login = () => {
     setMessage({ text: "", isError: false });
   }, [isLoginMode]);
 
-  const API_BASE_URL = "http://localhost/instapay-backend/auth";
+  const API_BASE_URL = "http://localhost:8000/auth";
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhone(e.target.value.replace(/\D/g, ""));

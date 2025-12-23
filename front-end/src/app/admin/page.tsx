@@ -48,7 +48,7 @@ export default function AdminDashboard() {
   const fetchStats = async () => {
     try {
       const response = await fetch(
-        "http://localhost/instapay-backend/admin/get_stats.php"
+        "http://localhost:8000/admin/get_stats.php"
       );
       const data = await response.json();
       if (data.status === "success") {
@@ -63,7 +63,7 @@ export default function AdminDashboard() {
   const fetchRecentTransactions = async () => {
     try {
       const response = await fetch(
-        "http://localhost/instapay-backend/admin/get_recent_transactions.php"
+        "http://localhost:8000/admin/get_recent_transactions.php"
       );
       const data = await response.json();
       if (data.status === "success") {

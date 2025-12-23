@@ -53,7 +53,7 @@ function CollectMoneyContent() {
     setLoading(true);
     try {
       // 3. إرسال الطلب للباك إند
-      const response = await fetch("http://localhost/instapay-backend/transaction/send_request.php", {
+      const response = await fetch("http://localhost:8000/transaction/send_request.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

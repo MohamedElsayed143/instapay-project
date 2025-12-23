@@ -10,7 +10,7 @@ export default function AdminTransactions() {
   useEffect(() => {
     const fetchAllTransactions = async () => {
       try {
-        const response = await fetch("http://localhost/instapay-backend/admin/get_all_activity.php");
+        const response = await fetch("http://localhost:8000/admin/get_all_activity.php");
         const data = await response.json();
         if (data.status === "success") setTransactions(data.transactions);
       } catch (e) { 

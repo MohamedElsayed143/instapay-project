@@ -54,7 +54,7 @@ export default function ManageAccountsPage() {
   const fetchUserData = useCallback(async (userId: string) => {
     try {
       const response = await fetch(
-        `http://localhost/instapay-backend/auth/get_user.php?id=${userId}`
+        `http://localhost:8000/auth/get_user.php?id=${userId}`
       );
       const data = await response.json();
 
@@ -97,7 +97,7 @@ export default function ManageAccountsPage() {
     setUpdating(true);
     try {
       const response = await fetch(
-        "http://localhost/instapay-backend/auth/upload_avatar.php",
+        "http://localhost:8000/auth/upload_avatar.php",
         {
           method: "POST",
           body: formData, // لا نضع headers لـ FormData المتصفح يضعها تلقائياً
@@ -122,7 +122,7 @@ export default function ManageAccountsPage() {
     setUpdating(true);
     try {
       const response = await fetch(
-        "http://localhost/instapay-backend/auth/settings.php",
+        "http://localhost:8000/auth/settings.php",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -152,7 +152,7 @@ export default function ManageAccountsPage() {
     setUpdating(true);
     try {
       const response = await fetch(
-        "http://localhost/instapay-backend/auth/settings.php",
+        "http://localhost:8000/auth/settings.php",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -266,7 +266,7 @@ export default function ManageAccountsPage() {
                 <div className="w-32 h-32 bg-purple-100 rounded-[2rem] flex items-center justify-center text-purple-600 mb-6 overflow-hidden border-4 border-slate-50 transition-all group-hover:scale-105">
                   {user.avatar ? (
                     <img
-                      src={`http://localhost/instapay-backend/uploads/avatars/${user.avatar}`}
+                      src={`http://localhost:8000/uploads/avatars/${user.avatar}`}
                       alt="Profile"
                       className="w-full h-full object-cover"
                       // منع التخزين المؤقت للصورة القديمة عند التحديث
