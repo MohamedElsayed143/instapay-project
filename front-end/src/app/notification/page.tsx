@@ -25,7 +25,7 @@ export default function NotificationsPage() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/notification/get_notifications.php?user_id=${savedUser.id}`
+        `http://localhost/instapay-backend/notification/get_notifications.php?user_id=${savedUser.id}`
       );
       const data = await response.json();
       if (data.status === "success") {
@@ -53,7 +53,7 @@ export default function NotificationsPage() {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/transaction/respond_to_request.php",
+        "http://localhost/instapay-backend/transaction/respond_to_request.php",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -46,7 +46,7 @@ export default function InstapayDashboard() {
   const fetchUserData = useCallback(async (userId: string) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/auth/get_user.php?id=${userId}`
+        `http://localhost/instapay-backend/auth/get_user.php?id=${userId}`
       );
       const data = await response.json();
 
@@ -73,7 +73,7 @@ export default function InstapayDashboard() {
   const fetchRecentTransactions = useCallback(async (userId: string) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/notification/get_recent_transactions.php?user_id=${userId}`
+        `http://localhost/instapay-backend/notification/get_recent_transactions.php?user_id=${userId}`
       );
       const data = await response.json();
       if (data.status === "success" && data.transactions) {
@@ -87,7 +87,7 @@ export default function InstapayDashboard() {
   const fetchUnreadCount = useCallback(async (userId: string) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/notification/get_unread_count.php?user_id=${userId}`
+        `http://localhost/instapay-backend/notification/get_unread_count.php?user_id=${userId}`
       );
       const data = await response.json();
       if (data.status === "success") setUnreadCount(data.unread_count);

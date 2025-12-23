@@ -32,7 +32,7 @@ const Login = () => {
     setMessage({ text: "", isError: false });
   }, [isLoginMode]);
 
-  const API_BASE_URL = "http://localhost:8000/auth";
+  const API_BASE_URL = "http://localhost/instapay-backend/auth";
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhone(e.target.value.replace(/\D/g, ""));
@@ -65,7 +65,7 @@ const Login = () => {
             isError: false,
           });
           setTimeout(() => {
-            router.push(data.user.role === "admin" ? "/admin" : "/dashboard");
+            router.push(data.user.role === "admin" ? "/dashboard" : "/dashboard");
           }, 1000);
         } else {
           setMessage({ 
@@ -184,7 +184,7 @@ const Login = () => {
               className="w-full relative h-14 mt-4 overflow-hidden rounded-2xl bg-white text-black font-black text-xs uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
-                {loading ? "Processing..." : isLoginMode ? "Authorize Login" : "Initialize Account"}
+                {loading ? "Processing..." : isLoginMode ? "Login" : "Create Account"}
                 {!loading && <ArrowRight size={16} />}
               </span>
             </button>

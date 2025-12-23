@@ -15,7 +15,7 @@ export default function ManageUsers() {
     setLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:8000/admin/get_all_users.php"
+        "http://localhost/instapay-backend/admin/get_all_users.php"
       );
       const data = await response.json();
       if (data.status === "success") setUsers(data.users);
@@ -49,7 +49,7 @@ export default function ManageUsers() {
     if (result.isConfirmed) {
       try {
         const response = await fetch(
-          "http://localhost:8000/admin/delete_user.php",
+          "http://localhost/instapay-backend/admin/delete_user.php",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -73,7 +73,7 @@ export default function ManageUsers() {
     e.preventDefault();
     try {
       const response = await fetch(
-        "http://localhost:8000/admin/update_user_full.php",
+        "http://localhost/instapay-backend/admin/update_user_full.php",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

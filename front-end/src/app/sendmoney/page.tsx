@@ -59,7 +59,7 @@ const SendMoneyPage: React.FC = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/transaction/send-money.php",
+        "http://localhost/instapay-backend/transaction/send-money.php",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -23,7 +23,6 @@ function CollectMoneyContent() {
   const handleGenerateRequest = async () => {
     setError("");
     
-    // 1. استخراج بيانات المستخدم من التخزين المحلي
     const userRaw = localStorage.getItem("user");
     if (!userRaw) {
       setError("Session expired. Please login again.");
@@ -33,7 +32,6 @@ function CollectMoneyContent() {
 
     const savedUser = JSON.parse(userRaw);
 
-    // 2. التحقق من المدخلات
     if (!amount || amount <= 0) {
       setError("Please enter a valid amount");
       return;
@@ -44,7 +42,6 @@ function CollectMoneyContent() {
       return;
     }
 
-    // التحقق من أن المستخدم لا يطلب مالاً من نفسه
     if (mobileNumber === savedUser.phone) {
       setError("You cannot request money from your own number");
       return;
@@ -52,13 +49,12 @@ function CollectMoneyContent() {
 
     setLoading(true);
     try {
-      // 3. إرسال الطلب للباك إند
-      const response = await fetch("http://localhost:8000/transaction/send_request.php", {
+      const response = await fetch("http://localhost/instapay-backend/transaction/send_request.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          requester_id: savedUser.id, // ID الشخص اللي بيطلب (أنت)
-          payer_phone: mobileNumber,  // رقم الشخص اللي هيدفع
+          requester_id: savedUser.id,
+          payer_phone: mobileNumber,
           amount: amount
         }),
       });
@@ -69,10 +65,8 @@ function CollectMoneyContent() {
         setShowSuccess(true);
         setAmount("");
         setMobileNumber("");
-        // إخفاء رسالة النجاح بعد 3 ثواني
         setTimeout(() => setShowSuccess(false), 3000);
       } else {
-        // إظهار رسالة الخطأ القادمة من السيرفر (مثل: الهاتف غير مسجل)
         setError(data.message || "Failed to send request");
       }
     } catch (e) {
@@ -83,23 +77,23 @@ function CollectMoneyContent() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-[#0f0c29] bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e] font-sans relative overflow-hidden text-left">
-      {/* Decorative Blur Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px] animate-pulse"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-500/10 rounded-full blur-[120px]"></div>
+    <div className="min-h-screen w-full flex flex-col bg-[#f8fafc] bg-gradient-to-br from-[#f8fafc] via-[#f1f5f9] to-[#e2e8f0] font-sans relative overflow-hidden text-left">
+      {/* Decorative Blur Orbs - Lighter versions */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-200/40 rounded-full blur-[120px] animate-pulse"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-100/40 rounded-full blur-[120px]"></div>
 
       {/* Header */}
-      <nav className="relative z-50 border-b border-white/10 backdrop-blur-md px-6 py-4">
+      <nav className="relative z-50 border-b border-gray-200 backdrop-blur-md bg-white/50 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between text-left">
-          <Link href="/dashboard" className="flex items-center gap-2 text-white/60 hover:text-white transition-colors group">
+          <Link href="/dashboard" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors group">
             <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             <span className="font-bold text-sm">Dashboard</span>
           </Link>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-orange-500 rounded-lg flex items-center justify-center text-white font-black text-xs shadow-lg shadow-purple-900/40">IP</div>
-            <span className="font-black text-white tracking-tight uppercase">InstaPay</span>
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-orange-500 rounded-lg flex items-center justify-center text-white font-black text-xs shadow-md shadow-purple-200">IP</div>
+            <span className="font-black text-gray-900 tracking-tight uppercase">InstaPay</span>
           </div>
-          <HelpCircle className="w-6 h-6 text-white/20 cursor-pointer" />
+          <HelpCircle className="w-6 h-6 text-gray-300 cursor-pointer hover:text-gray-500 transition-colors" />
         </div>
       </nav>
 
@@ -108,11 +102,11 @@ function CollectMoneyContent() {
           
           {/* Info Side */}
           <div className="space-y-8">
-            <h1 className="text-5xl font-black text-white leading-tight">
+            <h1 className="text-5xl font-black text-gray-900 leading-tight">
               Collect Money <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-orange-400">Instantly.</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-orange-500">Instantly.</span>
             </h1>
-            <p className="text-white/40 text-lg font-medium leading-relaxed max-w-md">
+            <p className="text-gray-500 text-lg font-medium leading-relaxed max-w-md">
               Request payments securely from any user using only their mobile number.
             </p>
             <div className="space-y-4">
@@ -121,69 +115,69 @@ function CollectMoneyContent() {
                 { step: "02", text: "Set the amount you need" },
                 { step: "03", text: "Recipient receives notification" }
               ].map((item) => (
-                <div key={item.step} className="flex items-center gap-4 bg-white/[0.03] border border-white/5 p-4 rounded-2xl backdrop-blur-sm hover:bg-white/[0.06] transition-all">
-                  <span className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-white font-black text-sm">{item.step}</span>
-                  <span className="text-white/70 font-bold text-sm">{item.text}</span>
+                <div key={item.step} className="flex items-center gap-4 bg-white border border-gray-100 p-4 rounded-2xl shadow-sm hover:shadow-md transition-all">
+                  <span className="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600 font-black text-sm">{item.step}</span>
+                  <span className="text-gray-700 font-bold text-sm">{item.text}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Form Side */}
-          <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 p-10 rounded-[3rem] shadow-2xl">
+          <div className="bg-white border border-gray-200 p-10 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
             <div className="flex items-center gap-3 mb-10 text-left">
-                <div className="p-3 bg-purple-500/20 rounded-2xl">
-                    <CircleDollarSign className="text-purple-400" size={24} />
+                <div className="p-3 bg-purple-50 rounded-2xl">
+                    <CircleDollarSign className="text-purple-600" size={24} />
                 </div>
-                <h2 className="text-2xl font-black text-white tracking-tight">New Request</h2>
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight">New Request</h2>
             </div>
             
             {error && (
-              <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-[13px] font-bold text-center animate-in fade-in zoom-in duration-300">
+              <div className="mb-8 p-4 bg-red-50 border border-red-100 text-red-500 rounded-2xl text-[13px] font-bold text-center animate-in fade-in zoom-in duration-300">
                 {error}
               </div>
             )}
             
             <div className="space-y-8 text-left">
-              <div className="relative border-b border-white/10 group focus-within:border-purple-500/50 transition-all">
-                <label className="text-[10px] uppercase font-black tracking-widest text-white/30 mb-2 block">Payer Mobile Number</label>
+              <div className="relative border-b border-gray-100 group focus-within:border-purple-500 transition-all">
+                <label className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-2 block">Payer Mobile Number</label>
                 <div className="flex items-center pb-4">
-                  <Smartphone className="w-5 h-5 text-white/20 group-focus-within:text-purple-500 transition-colors mr-3" />
+                  <Smartphone className="w-5 h-5 text-gray-300 group-focus-within:text-purple-600 transition-colors mr-3" />
                   <input
                     type="tel"
                     placeholder="01xxxxxxxxx"
                     value={mobileNumber}
                     onChange={(e) => setMobileNumber(e.target.value)}
-                    className="flex-1 bg-transparent outline-none text-white font-bold placeholder:text-white/5"
+                    className="flex-1 bg-transparent outline-none text-gray-900 font-bold placeholder:text-gray-200"
                   />
                 </div>
               </div>
 
-              <div className="relative border-b border-white/10 group focus-within:border-orange-500/50 transition-all">
-                <label className="text-[10px] uppercase font-black tracking-widest text-white/30 mb-2 block">Amount (EGP)</label>
+              <div className="relative border-b border-gray-100 group focus-within:border-orange-500 transition-all">
+                <label className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-2 block">Amount (EGP)</label>
                 <div className="flex items-center pb-4">
                   <input
                     type="number"
                     placeholder="0.00"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value ? Number(e.target.value) : "")}
-                    className="text-4xl bg-transparent outline-none text-white font-black w-full placeholder:text-white/5"
+                    className="text-4xl bg-transparent outline-none text-gray-900 font-black w-full placeholder:text-gray-100"
                   />
-                  <span className="text-white/20 font-black text-lg">EGP</span>
+                  <span className="text-gray-300 font-black text-lg">EGP</span>
                 </div>
               </div>
 
               {showSuccess && (
-                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center justify-center gap-3 animate-bounce">
-                  <CheckCircle className="w-5 h-5 text-emerald-400" />
-                  <span className="text-emerald-400 text-xs font-black uppercase tracking-widest">Request Sent!</span>
+                <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center justify-center gap-3 animate-bounce">
+                  <CheckCircle className="w-5 h-5 text-emerald-500" />
+                  <span className="text-emerald-600 text-[11px] font-black uppercase tracking-widest">Request Sent Successfully!</span>
                 </div>
               )}
 
               <button
                 onClick={handleGenerateRequest}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-purple-600 to-orange-500 text-white font-black py-5 rounded-[1.5rem] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-purple-900/40 disabled:opacity-50 flex items-center justify-center gap-3 group mt-4"
+                className="w-full bg-gradient-to-r from-purple-600 to-orange-500 text-white font-black py-5 rounded-[1.5rem] hover:shadow-lg hover:shadow-purple-200 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-3 group mt-4"
               >
                 {loading ? (
                     <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

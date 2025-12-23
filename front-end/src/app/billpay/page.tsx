@@ -65,7 +65,7 @@ export default function BillPaymentPage() {
     const id = getUserId();
     if (!id) return;
     try {
-      const res = await fetch(`http://localhost:8000/auth/get_user.php?id=${id}`);
+      const res = await fetch(`http://localhost/instapay-backend/auth/get_user.php?id=${id}`);
       if (!res.ok) throw new Error();
       const data = await res.json();
       if (data.status === "success") setUserBalance(Number(data.user.balance));
@@ -78,7 +78,7 @@ export default function BillPaymentPage() {
     const id = getUserId();
     if (!id) return;
     try {
-      const res = await fetch(`http://localhost:8000/auth/get_bills.php?user_id=${id}`);
+      const res = await fetch(`http://localhost/instapay-backend/auth/get_bills.php?user_id=${id}`);
       if (!res.ok) throw new Error();
       const data = await res.json();
       if (data.status === "success") {
@@ -98,7 +98,7 @@ export default function BillPaymentPage() {
     const billId = showConfirm.billId;
     if (!billId) return;
     try {
-      const res = await fetch("http://localhost:8000/auth/delete_bill.php", {
+      const res = await fetch("http://localhost/instapay-backend/auth/delete_bill.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bill_id: billId }),
@@ -130,7 +130,7 @@ export default function BillPaymentPage() {
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/auth/pay_bill.php", {
+      const response = await fetch("http://localhost/instapay-backend/auth/pay_bill.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
