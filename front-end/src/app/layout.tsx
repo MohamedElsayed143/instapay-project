@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { VisualEditsMessenger } from "orchids-visual-edits";
+import { LanguageProvider } from "@/hooks/use-language";
 
 export const metadata: Metadata = {
   title: "InstaPay - Send money to anyone, anywhere, at any time!",
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
-        {children}
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
         <VisualEditsMessenger />
       </body>
     </html>

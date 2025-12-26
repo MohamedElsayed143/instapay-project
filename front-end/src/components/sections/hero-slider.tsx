@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useLanguage } from "@/hooks/use-language";
 
 const ASSETS = {
   googlePlay:
@@ -11,41 +12,40 @@ const ASSETS = {
     "https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/b9b52292-207e-4ad8-b62f-e104f3f495a0-instapay-eg/assets/images/Download_on_the_App_Store_Badge_US-UK_RGB_blk_0929-3.png",
 };
 
-const SLIDES = [
-  {
-    id: 1,
-    title: "Send money to anyone, anywhere, at any time!",
-    description:
-      "You can send money from your bank account or Meeza Prepaid card instantly 24/7 to any Bank Accounts, Digital Wallets and any Card.",
-    // تأكد أن مسار الصورة صحيح ويعمل
-    image: "/sliderimg/img1.png",
-  },
-  {
-    id: 2,
-    title: "Self-onboarding.",
-    description: "No need to sign any papers, just onboard yourself digitally.",
-    image: "/sliderimg/img2.png",
-  },
-  {
-    id: 3,
-    title: "More than just payments.",
-    description: "Experience a seamless way to manage your finances on the go.",
-    image: "/sliderimg/img3.png",
-  },
-];
-
 export function HeroSlider() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const autoplayDuration = 5000;
+  const { t, isRtl } = useLanguage();
+
+  const slides = useMemo(() => [
+    {
+      id: 1,
+      title: t('hero.slide1.title'),
+      description: t('hero.slide1.desc'),
+      image: "/sliderimg/img1.png",
+    },
+    {
+      id: 2,
+      title: t('hero.slide2.title'),
+      description: t('hero.slide2.desc'),
+      image: "/sliderimg/img2.png",
+    },
+    {
+      id: 3,
+      title: t('hero.slide3.title'),
+      description: t('hero.slide3.desc'),
+      image: "/sliderimg/img3.png",
+    },
+  ], [t]);
 
   const handleNext = useCallback(() => {
-    setCurrentSlide((prev) => (prev + 1) % SLIDES.length);
-  }, []);
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  }, [slides.length]);
 
   const handlePrev = useCallback(() => {
-    setCurrentSlide((prev) => (prev - 1 + SLIDES.length) % SLIDES.length);
-  }, []);
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  }, [slides.length]);
 
   useEffect(() => {
     if (isPaused) return;
@@ -62,7 +62,7 @@ export function HeroSlider() {
     >
       {/* 1. BACKGROUND LAYER - DYNAMIC IMAGES */}
       <div className="absolute inset-0 w-full h-full z-0">
-        {SLIDES.map((slide, index) => (
+        {slides.map((slide, index) => (
           <div
             key={slide.id}
             className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
@@ -74,26 +74,25 @@ export function HeroSlider() {
               alt={slide.title}
               fill
               className="object-cover object-center"
-              priority={index === 0} // Load first image immediately
+              priority={index === 0}
             />
-            {/* Dark Overlay for readability */}
             <div className="absolute inset-0 bg-black/60" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
+            <div className={`absolute inset-0 bg-gradient-to-r ${isRtl ? 'from-transparent via-black/50 to-black/90' : 'from-black/90 via-black/50 to-transparent'}`} />
           </div>
         ))}
       </div>
 
       {/* 2. CONTENT LAYER */}
-      <div className="relative z-10 w-full h-full container mx-auto px-4 md:px-12 flex flex-col justify-center">
-        <div className="relative w-full md:w-2/3 lg:w-[55%] h-full flex items-center">
+      <div className={`relative z-10 w-full h-full container mx-auto px-4 md:px-12 flex flex-col justify-center ${isRtl ? 'text-right' : 'text-left'}`}>
+        <div className={`relative w-full md:w-2/3 lg:w-[55%] h-full flex items-center ${isRtl ? 'mr-auto' : ''}`}>
           <div className="w-full">
-            {SLIDES.map((slide, index) => (
+            {slides.map((slide, index) => (
               <div
                 key={slide.id}
                 className={`absolute top-1/2 -translate-y-1/2 w-full transition-all duration-700 ease-in-out ${
                   index === currentSlide
                     ? "opacity-100 translate-x-0 visible"
-                    : "opacity-0 -translate-x-8 invisible"
+                    : `opacity-0 ${isRtl ? 'translate-x-8' : '-translate-x-8'} invisible`
                 }`}
               >
                 <div
@@ -107,13 +106,11 @@ export function HeroSlider() {
                     {slide.title}
                   </h1>
 
-                  <p className="text-[#F5F5F5] text-sm md:text-lg leading-[1.6] max-w-xl drop-shadow-sm">
+                  <p className={`text-[#F5F5F5] text-sm md:text-lg leading-[1.6] max-w-xl drop-shadow-sm ${isRtl ? 'mr-0 ml-auto' : ''}`}>
                     {slide.description}
                   </p>
 
-                  {/* NOTE: Removed the foreground Image block here as per request */}
-
-                  <div className="flex flex-wrap items-center gap-3 pt-4">
+                  <div className={`flex flex-wrap items-center gap-3 pt-4 ${isRtl ? 'justify-end' : ''}`}>
                     <a
                       href="https://play.google.com/store/apps/details?id=com.egyptianbanks.instapay"
                       target="_blank"
@@ -171,9 +168,8 @@ export function HeroSlider() {
       {/* 4. NAVIGATION CONTROLS */}
       <div className="absolute bottom-[80px] md:bottom-[120px] w-full z-30">
         <div className="container mx-auto px-4 relative h-10 flex items-center justify-center md:items-end">
-          {/* Dots */}
           <div className="flex items-center gap-3">
-            {SLIDES.map((slide, idx) => (
+            {slides.map((slide, idx) => (
               <button
                 key={slide.id}
                 onClick={() => setCurrentSlide(idx)}
@@ -187,37 +183,36 @@ export function HeroSlider() {
             ))}
           </div>
 
-          {/* Desktop Arrows */}
-          <div className="hidden md:flex absolute top-1/2 -translate-y-1/2 w-[90px] justify-between left-1/2 -translate-x-1/2 mt-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className={`hidden md:flex absolute top-1/2 -translate-y-1/2 w-[90px] justify-between left-1/2 -translate-x-1/2 mt-12 opacity-0 group-hover:opacity-100 transition-opacity duration-300 ${isRtl ? 'flex-row-reverse' : ''}`}>
             <button
-              onClick={handlePrev}
+              onClick={isRtl ? handleNext : handlePrev}
               className="w-10 h-10 rounded-full border border-white/40 bg-black/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-[#FF6B35] hover:border-[#FF6B35] transition-all focus:outline-none"
             >
-              <ChevronLeft size={20} />
+              {isRtl ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
             </button>
             <button
-              onClick={handleNext}
+              onClick={isRtl ? handlePrev : handleNext}
               className="w-10 h-10 rounded-full border border-white/40 bg-black/20 backdrop-blur-sm flex items-center justify-center text-white hover:bg-[#FF6B35] hover:border-[#FF6B35] transition-all focus:outline-none"
             >
-              <ChevronRight size={20} />
+              {isRtl ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
             </button>
           </div>
         </div>
       </div>
 
       {/* Mobile Arrows */}
-      <div className="md:hidden absolute top-1/2 -translate-y-1/2 w-full flex justify-between px-2 z-30 pointer-events-none">
+      <div className={`md:hidden absolute top-1/2 -translate-y-1/2 w-full flex justify-between px-2 z-30 pointer-events-none ${isRtl ? 'flex-row-reverse' : ''}`}>
         <button
-          onClick={handlePrev}
+          onClick={isRtl ? handleNext : handlePrev}
           className="pointer-events-auto w-10 h-10 flex items-center justify-center text-white/80 hover:text-white bg-black/10 rounded-full backdrop-blur-sm"
         >
-          <ChevronLeft size={28} />
+          {isRtl ? <ChevronRight size={28} /> : <ChevronLeft size={28} />}
         </button>
         <button
-          onClick={handleNext}
+          onClick={isRtl ? handlePrev : handleNext}
           className="pointer-events-auto w-10 h-10 flex items-center justify-center text-white/80 hover:text-white bg-black/10 rounded-full backdrop-blur-sm"
         >
-          <ChevronRight size={28} />
+          {isRtl ? <ChevronLeft size={28} /> : <ChevronRight size={28} />}
         </button>
       </div>
     </section>

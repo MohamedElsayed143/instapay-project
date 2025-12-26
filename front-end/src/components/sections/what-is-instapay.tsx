@@ -1,8 +1,11 @@
 'use client';
 
 import React from 'react';
+import { useLanguage } from '@/hooks/use-language';
 
 export function WhatIsInstaPay() {
+  const { t, isRtl } = useLanguage();
+
   return (
     <section 
       id="h" 
@@ -22,25 +25,25 @@ export function WhatIsInstaPay() {
         </svg>
       </div>
 
-      <div className="absolute top-1/2 right-0 -translate-y-1/2 w-[800px] h-[800px] bg-purple-900/20 rounded-full blur-3xl pointer-events-none z-0"></div>
+      <div className={`absolute top-1/2 ${isRtl ? 'left-0' : 'right-0'} -translate-y-1/2 w-[800px] h-[800px] bg-purple-900/20 rounded-full blur-3xl pointer-events-none z-0`}></div>
 
-      <div className="container mx-auto px-4 md:px-8 relative z-10">
-        <div className="flex flex-col lg:flex-row items-start">
+      <div className={`container mx-auto px-4 md:px-8 relative z-10 ${isRtl ? 'text-right' : 'text-left'}`}>
+        <div className={`flex flex-col lg:flex-row items-start ${isRtl ? 'lg:flex-row-reverse' : ''}`}>
           <div className="w-full lg:w-4/5 pt-8">
-            <div className="mb-12 max-w-3xl">
+            <div className={`mb-12 max-w-3xl ${isRtl ? 'mr-0 ml-auto' : ''}`}>
               <h2 className="text-4xl md:text-[40px] font-bold text-white mb-6 font-cairo leading-tight">
-                What is InstaPay?
+                {t('whatIs.title')}
               </h2>
-              <p className="text-[#F5F5F5] text-sm md:text-base font-cairo leading-relaxed max-w-2xl opacity-90">
-                InstaPay is an app that allows direct access to all your bank accounts and transfer instantly using your mobile device 24/7.
+              <p className={`text-[#F5F5F5] text-sm md:text-base font-cairo leading-relaxed max-w-2xl opacity-90 ${isRtl ? 'mr-0 ml-auto' : ''}`}>
+                {t('whatIs.desc')}
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <InfoCard title="Transaction Limits and Fees" />
-              <InfoCard title="What Is IPA?" />
-              <InfoCard title="How to receive money on your mobile number?" />
-              <InfoCard title="What is the transaction status handling?" />
+              <InfoCard title={t('whatIs.card1')} buttonText={t('whatIs.learnMore')} />
+              <InfoCard title={t('whatIs.card2')} buttonText={t('whatIs.learnMore')} />
+              <InfoCard title={t('whatIs.card3')} buttonText={t('whatIs.learnMore')} />
+              <InfoCard title={t('whatIs.card4')} buttonText={t('whatIs.learnMore')} />
             </div>
           </div>
         </div>
@@ -49,19 +52,20 @@ export function WhatIsInstaPay() {
   );
 }
 
-function InfoCard({ title }: { title: string }) {
+function InfoCard({ title, buttonText }: { title: string; buttonText: string }) {
+  const { isRtl } = useLanguage();
   return (
-    <div className="bg-[#D97E54]/90 backdrop-blur-sm rounded-xl p-6 md:p-8 flex flex-col justify-between h-[280px] md:h-[260px] shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-transform duration-300 hover:-translate-y-1 group">
+    <div className={`bg-[#D97E54]/90 backdrop-blur-sm rounded-xl p-6 md:p-8 flex flex-col justify-between h-[280px] md:h-[260px] shadow-[0_4px_16px_rgba(0,0,0,0.15)] transition-transform duration-300 hover:-translate-y-1 group ${isRtl ? 'text-right' : 'text-left'}`}>
       <h3 className="text-white font-bold text-lg md:text-xl leading-snug font-cairo">
         {title}
       </h3>
       
-      <div className="mt-4">
+      <div className={`mt-4 flex ${isRtl ? 'justify-end' : 'justify-start'}`}>
         <button 
           className="bg-[#6B2D9C] hover:bg-[#5B1F7D] text-white text-[13px] font-semibold py-2.5 px-6 rounded-full transition-all duration-300 shadow-sm"
           type="button"
         >
-          Learn More
+          {buttonText}
         </button>
       </div>
     </div>

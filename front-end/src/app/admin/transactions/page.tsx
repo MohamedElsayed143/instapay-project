@@ -2,8 +2,10 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, ArrowUpRight, FileText, Search, Filter } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/hooks/use-language";
 
 export default function AdminTransactions() {
+  const { t, isRtl, language } = useLanguage();
   const [transactions, setTransactions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -33,24 +35,24 @@ export default function AdminTransactions() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-8 font-sans text-gray-900">
+    <div className="min-h-screen bg-[#F8FAFC] p-8 font-sans text-gray-900" dir={isRtl ? 'rtl' : 'ltr'}>
       <div className="max-w-7xl mx-auto">
         <Link href="/admin" className="text-sm font-bold text-purple-600 flex items-center gap-2 mb-6">
-          <ArrowLeft size={16} /> Back to Admin Dashboard
+          <ArrowLeft size={16} className={isRtl ? "rotate-180" : ""} /> {t('admin.trans.back')}
         </Link>
 
         <div className="flex justify-between items-end mb-8">
           <div>
-            <h2 className="text-3xl font-black text-black">System Logs</h2>
-            <p className="text-gray-500 font-medium">Monitoring all global transactions</p>
+            <h2 className="text-3xl font-black text-black">{t('admin.trans.logs')}</h2>
+            <p className="text-gray-500 font-medium">{t('admin.trans.monitor')}</p>
           </div>
           <div className="flex gap-3">
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search className={`absolute ${isRtl ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-gray-400`} size={18} />
               <input 
                 type="text" 
-                placeholder="Search name, phone, or service..." 
-                className="pl-12 pr-6 py-3 bg-white border border-gray-100 rounded-2xl w-80 focus:ring-2 focus:ring-purple-500 outline-none shadow-sm"
+                placeholder={t('admin.trans.search')}
+                className={`w-80 py-3 bg-white border border-gray-100 rounded-2xl focus:ring-2 focus:ring-purple-500 outline-none shadow-sm ${isRtl ? 'pr-12 pl-6 text-right' : 'pl-12 pr-6'}`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -62,14 +64,14 @@ export default function AdminTransactions() {
         </div>
 
         <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100">
-          <table className="w-full text-left border-collapse">
+          <table className={`w-full border-collapse ${isRtl ? 'text-right' : 'text-left'}`}>
             <thead className="bg-gray-50/50 border-b border-gray-100 text-gray-400 text-[10px] font-black uppercase tracking-[0.2em]">
               <tr>
-                <th className="px-8 py-6">Status/Type</th>
-                <th className="px-8 py-6">Sender Details</th>
-                <th className="px-8 py-6">Transaction Details</th>
-                <th className="px-8 py-6">Amount</th>
-                <th className="px-8 py-6">Date</th>
+                <th className="px-8 py-6">{t('admin.trans.th.status')}</th>
+                <th className="px-8 py-6">{t('admin.trans.th.sender')}</th>
+                <th className="px-8 py-6">{t('admin.trans.th.details')}</th>
+                <th className="px-8 py-6">{t('admin.trans.th.amount')}</th>
+                <th className="px-8 py-6">{t('admin.trans.th.date')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -77,31 +79,30 @@ export default function AdminTransactions() {
                 <tr key={tx.id} className="hover:bg-gray-50/30 transition-colors">
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tx.type === 'bill' ? 'bg-orange-50 text-orange-600' : 'bg-purple-50 text-purple-600'}`}>
-                        {tx.type === 'bill' ? <FileText size={18} /> : <ArrowUpRight size={18} />}
+                        <div className={`p-2 rounded-lg ${tx.type === 'bill' ? 'bg-orange-50 text-orange-600' : 'bg-purple-50 text-purple-600'}`}>
+                          {tx.type === 'bill' ? <FileText size={18} /> : <ArrowUpRight size={18} className={isRtl && tx.type !== 'bill' ? "-rotate-90" : ""} />}
+                        </div>
+                        <span className="font-bold text-xs uppercase tracking-wider">{t(`type.${tx.type.toLowerCase()}`)}</span>
                       </div>
-                      <span className="font-bold text-xs uppercase tracking-wider">{tx.type}</span>
-                    </div>
                   </td>
                   <td className="px-8 py-6">
                     <div className="flex flex-col">
-                      {/* عرض اسمك كأدمن أو اسم المستخدم بشكل صحيح */}
                       <span className="font-bold text-gray-900">{tx.sender_name}</span>
                       <span className="text-[10px] text-gray-400 font-bold">{tx.sender_phone}</span>
                     </div>
                   </td>
                   <td className="px-8 py-6">
                     <p className="font-bold text-sm text-gray-900">
-                      {tx.type === 'bill' ? `To: ${tx.service_name}` : `To: ${tx.receiver_phone || 'N/A'}`}
+                      {tx.type === 'bill' ? `${t('admin.trans.to')} ${tx.service_name}` : `${t('admin.trans.to')} ${tx.receiver_phone || 'N/A'}`}
                     </p>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">{tx.account_reference || 'Standard Transfer'}</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase mt-0.5">{tx.account_reference || t('admin.trans.standard')}</p>
                   </td>
                   <td className="px-8 py-6">
                     <span className="font-black text-gray-900">{parseFloat(tx.amount).toLocaleString()} EGP</span>
                   </td>
                   <td className="px-8 py-6">
                     <span className="text-gray-400 text-xs font-bold">
-                      {new Date(tx.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      {new Date(tx.created_at).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </td>
                 </tr>
@@ -110,7 +111,7 @@ export default function AdminTransactions() {
           </table>
           {filteredTransactions.length === 0 && (
             <div className="py-20 text-center text-gray-400 font-medium">
-              {searchTerm ? "No results match your search." : "No system activity recorded yet."}
+              {searchTerm ? t('admin.trans.noRes') : t('admin.trans.noAct')}
             </div>
           )}
         </div>

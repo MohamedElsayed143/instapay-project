@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/hooks/use-language";
 import {
   Smartphone,
   CheckCircle,
@@ -17,6 +18,7 @@ interface User {
 }
 
 const SendMoneyPage: React.FC = () => {
+  const { t, isRtl } = useLanguage();
   const [amount, setAmount] = useState<string>("");
   const [mobileNumber, setMobileNumber] = useState<string>("");
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
@@ -41,17 +43,17 @@ const SendMoneyPage: React.FC = () => {
 
     // التحقق من المدخلات
     if (!mobileNumber || mobileNumber.length < 10) {
-      setErrorMessage("يرجى إدخال رقم هاتف صحيح");
+      setErrorMessage(t('send.error.phone'));
       return;
     }
 
     if (!amount || parseFloat(amount) <= 0) {
-      setErrorMessage("يرجى إدخال مبلغ صحيح");
+      setErrorMessage(t('send.error.amount'));
       return;
     }
 
     if (user && parseFloat(user.balance.toString()) < parseFloat(amount)) {
-      setErrorMessage("رصيدك الحالي لا يكفي لإتمام العملية");
+      setErrorMessage(t('send.error.balance'));
       return;
     }
 
@@ -88,10 +90,10 @@ const SendMoneyPage: React.FC = () => {
         // إخفاء رسالة النجاح بعد 5 ثواني
         setTimeout(() => setShowSuccess(false), 5000);
       } else {
-        setErrorMessage(result.message || "فشلت العملية");
+        setErrorMessage(result.message || (isRtl ? "فشلت العملية" : "Operation failed"));
       }
     } catch (error) {
-      setErrorMessage("خطأ في الاتصال بالسيرفر، تأكد من تشغيل XAMPP");
+      setErrorMessage(isRtl ? "خطأ في الاتصال بالسيرفر، تأكد من تشغيل XAMPP" : "Server connection error, make sure XAMPP is running");
     } finally {
       setLoading(false);
     }
@@ -99,8 +101,8 @@ const SendMoneyPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-orange-50 text-left"
-      dir="ltr"
+      className={`min-h-screen bg-gradient-to-br from-purple-50 via-white to-orange-50 ${isRtl ? 'text-right' : 'text-left'}`}
+      dir={isRtl ? 'rtl' : 'ltr'}
     >
       {/* Header */}
       <div className="bg-white shadow-sm sticky top-0 z-50">
@@ -113,10 +115,10 @@ const SendMoneyPage: React.FC = () => {
           </div>
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 text-purple-600 font-medium hover:gap-3 transition-all"
+            className={`flex items-center gap-2 text-purple-600 font-medium transition-all ${isRtl ? 'hover:gap-3 flex-row-reverse' : 'hover:gap-3'}`}
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Dashboard</span>
+            <ArrowLeft className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} />
+            <span>{t('send.back')}</span>
           </Link>
         </div>
       </div>
@@ -125,14 +127,14 @@ const SendMoneyPage: React.FC = () => {
         <div className="grid md:grid-cols-2 gap-8 items-start">
           <div className="space-y-6">
             <h1 className="text-4xl font-bold text-gray-900 mb-3">
-              Send Money Instantly
+              {t('send.title')}
             </h1>
             <p className="text-lg text-gray-600">
-              Transfer funds easily and securely to any InstaPay user.
+              {t('send.desc')}
             </p>
 
             <div className="bg-purple-600 p-6 rounded-2xl text-white shadow-lg inline-block w-full md:w-auto">
-              <p className="text-purple-100 text-sm">Your Current Balance</p>
+              <p className="text-purple-100 text-sm">{t('dash.balance')}</p>
               <p className="text-2xl font-bold">
                 {user?.balance
                   ? parseFloat(user.balance.toString()).toLocaleString()
@@ -145,7 +147,7 @@ const SendMoneyPage: React.FC = () => {
           {/* Form Card */}
           <div className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-50">
             <h2 className="text-2xl font-bold text-gray-800 mb-8">
-              Transfer Details
+              {t('send.details')}
             </h2>
 
             {errorMessage && (
@@ -158,30 +160,31 @@ const SendMoneyPage: React.FC = () => {
             {showSuccess && (
               <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 text-green-700 animate-bounce">
                 <CheckCircle className="w-5 h-5 flex-shrink-0" />
-                <span>Transaction completed successfully!</span>
+                <span>{t('send.success')}</span>
               </div>
             )}
 
             <div className="mb-6">
-              <label className="text-sm font-semibold text-gray-700 mb-2 block text-left">
-                Recipient Mobile Number
+              <label className={`text-sm font-semibold text-gray-700 mb-2 block ${isRtl ? 'text-right' : 'text-left'}`}>
+                {t('send.mobile')}
               </label>
-              <div className="flex items-center border-2 border-gray-100 rounded-2xl px-4 py-4 focus-within:border-purple-600 bg-gray-50 transition">
-                <Smartphone className="text-gray-300 w-5 h-5 mr-3" />
-                <span className="text-gray-400 font-bold mr-2">+20</span>
+              <div className={`flex items-center border-2 border-gray-100 rounded-2xl px-4 py-4 focus-within:border-purple-600 bg-gray-50 transition ${isRtl ? 'flex-row-reverse' : ''}`}>
+                <Smartphone className={`text-gray-300 w-5 h-5 ${isRtl ? 'ml-3' : 'mr-3'}`} />
+                <span className={`text-gray-400 font-bold ${isRtl ? 'ml-2' : 'mr-2'}`}>{isRtl ? '20+' : '+20'}</span>
                 <input
                   type="tel"
                   placeholder="1xxxxxxxxx"
                   value={mobileNumber}
                   onChange={(e) => setMobileNumber(e.target.value)}
                   className="flex-1 bg-transparent outline-none text-gray-700 text-lg tracking-wider"
+                  dir="ltr"
                 />
               </div>
             </div>
 
             <div className="mb-6">
-              <label className="text-sm font-semibold text-gray-700 mb-2 block text-left">
-                Amount (EGP)
+              <label className={`text-sm font-semibold text-gray-700 mb-2 block ${isRtl ? 'text-right' : 'text-left'}`}>
+                {t('send.amount')}
               </label>
               <div className="flex items-center border-2 border-gray-100 rounded-2xl px-4 py-4 focus-within:border-purple-600 bg-gray-50 transition">
                 <input
@@ -189,12 +192,12 @@ const SendMoneyPage: React.FC = () => {
                   placeholder="0.00"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="text-3xl text-gray-800 outline-none w-full font-bold bg-transparent"
+                  className={`text-3xl text-gray-800 outline-none w-full font-bold bg-transparent ${isRtl ? 'text-right' : ''}`}
                 />
               </div>
             </div>
 
-            <div className="mb-8 flex gap-2 flex-wrap">
+            <div className={`mb-8 flex gap-2 flex-wrap ${isRtl ? 'flex-row-reverse' : ''}`}>
               {quickAmounts.map((amt) => (
                 <button
                   key={amt}
@@ -213,8 +216,8 @@ const SendMoneyPage: React.FC = () => {
                 loading ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
-              {loading ? "Processing..." : "Confirm & Send Now"}
-              <Send className="w-5 h-5" />
+              {loading ? t('login.processing') : t('send.confirm')}
+              <Send className={`w-5 h-5 ${isRtl ? 'rotate-180' : ''}`} />
             </button>
           </div>
         </div>

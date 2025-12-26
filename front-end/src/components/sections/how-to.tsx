@@ -1,24 +1,27 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
-
-const CAROUSEL_ITEMS = [
-  { id: 1, category: "Sending Money", title: "to an IPA (Instant Payment Address)", video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-8.mp4" },
-  { id: 2, category: "Sending Money", title: "to a Digital Wallet", video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-7.mp4" },
-  { id: 3, category: "Sending Money", title: "to a Bank Account", video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-6.mp4" },
-  { id: 4, category: "Sending Money", title: "Transfer to any bank card", video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-5.mp4" },
-  { id: 5, category: "Request Money", title: "From other InstaPay users", video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback.mp4" },
-  { id: 6, category: "Check Balance", title: "Check Balance", video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-10.mp4" },
-  { id: 7, category: "Check Mini Statement", title: "Check Mini Statement", video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-4.mp4" },
-  { id: 8, category: "Add Multiple Bank accounts", title: "Add Multiple Bank accounts", video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-3.mp4" },
-  { id: 9, category: "Sending Money", title: "through Mobile Number Only", video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-2.mp4" },
-];
+import { useLanguage } from '@/hooks/use-language';
 
 export function HowTo() {
+  const { t, isRtl } = useLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slidesToShow, setSlidesToShow] = useState(3);
-  const totalSlides = CAROUSEL_ITEMS.length;
+
+  const carouselItems = useMemo(() => [
+    { id: 1, category: t('howTo.category.send'), title: t('howTo.item1'), video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-8.mp4" },
+    { id: 2, category: t('howTo.category.send'), title: t('howTo.item2'), video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-7.mp4" },
+    { id: 3, category: t('howTo.category.send'), title: t('howTo.item3'), video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-6.mp4" },
+    { id: 4, category: t('howTo.category.send'), title: t('howTo.item4'), video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-5.mp4" },
+    { id: 5, category: t('howTo.category.request'), title: t('howTo.item5'), video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback.mp4" },
+    { id: 6, category: t('howTo.category.balance'), title: t('howTo.item6'), video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-10.mp4" },
+    { id: 7, category: t('howTo.category.statement'), title: t('howTo.item7'), video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-4.mp4" },
+    { id: 8, category: t('howTo.category.addBank'), title: t('howTo.item8'), video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-3.mp4" },
+    { id: 9, category: t('howTo.category.send'), title: t('howTo.item9'), video: "https://www.instapay.eg/wp-content/uploads/2022/03/videoplayback-2.mp4" },
+  ], [t]);
+
+  const totalSlides = carouselItems.length;
 
   useEffect(() => {
     const handleResize = () => {
@@ -47,16 +50,16 @@ export function HowTo() {
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
         <h2 className="text-3xl md:text-5xl font-bold text-white text-center mb-16 tracking-tight">
-          How To ?
+          {t('howTo.title')}
         </h2>
 
         <div className="relative group max-w-7xl mx-auto">
           <div className="overflow-hidden">
              <div 
               className="flex transition-transform duration-500 ease-out"
-              style={{ transform: `translateX(${translateValue}%)` }}
+              style={{ transform: `translateX(${isRtl ? -translateValue : translateValue}%)` }}
              >
-               {CAROUSEL_ITEMS.map((item) => (
+               {carouselItems.map((item) => (
                  <div key={item.id} className="flex-shrink-0 px-4" style={{ width: `${100 / slidesToShow}%` }}>
                    <Card item={item} />
                  </div>
@@ -64,12 +67,12 @@ export function HowTo() {
              </div>
           </div>
 
-          <button onClick={prevSlide} className="absolute left-0 top-[35%] -translate-y-1/2 -translate-x-4 md:-translate-x-12 text-white/50 hover:text-white transition-colors focus:outline-none" aria-label="Previous slide">
-            <ChevronLeft size={48} strokeWidth={1.5} />
+          <button onClick={isRtl ? nextSlide : prevSlide} className={`absolute ${isRtl ? 'right-0 translate-x-4 md:translate-x-12' : 'left-0 -translate-x-4 md:-translate-x-12'} top-[35%] -translate-y-1/2 text-white/50 hover:text-white transition-colors focus:outline-none`} aria-label="Previous slide">
+            {isRtl ? <ChevronRight size={48} strokeWidth={1.5} /> : <ChevronLeft size={48} strokeWidth={1.5} />}
           </button>
           
-          <button onClick={nextSlide} className="absolute right-0 top-[35%] -translate-y-1/2 translate-x-4 md:translate-x-12 text-white/50 hover:text-white transition-colors focus:outline-none" aria-label="Next slide">
-            <ChevronRight size={48} strokeWidth={1.5} />
+          <button onClick={isRtl ? prevSlide : nextSlide} className={`absolute ${isRtl ? 'left-0 -translate-x-4 md:-translate-x-12' : 'right-0 translate-x-4 md:translate-x-12'} top-[35%] -translate-y-1/2 text-white/50 hover:text-white transition-colors focus:outline-none`} aria-label="Next slide">
+            {isRtl ? <ChevronLeft size={48} strokeWidth={1.5} /> : <ChevronRight size={48} strokeWidth={1.5} />}
           </button>
 
           <div className="flex justify-center gap-2 mt-12">
@@ -94,7 +97,8 @@ export function HowTo() {
   );
 }
 
-function Card({ item }: { item: typeof CAROUSEL_ITEMS[0] }) {
+function Card({ item }: { item: any }) {
+  const { t, isRtl } = useLanguage();
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -107,7 +111,7 @@ function Card({ item }: { item: typeof CAROUSEL_ITEMS[0] }) {
   };
 
   return (
-    <div className="flex flex-col items-center group/card">
+    <div className={`flex flex-col items-center group/card ${isRtl ? 'text-right' : 'text-center'}`}>
       <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg mb-6 bg-black/20">
         <video
           ref={videoRef}
@@ -128,11 +132,11 @@ function Card({ item }: { item: typeof CAROUSEL_ITEMS[0] }) {
         )}
       </div>
 
-      <div className="text-center px-4 md:px-6">
+      <div className={`text-center px-4 md:px-6 ${isRtl ? 'text-right' : 'text-center'}`}>
         <h3 className="text-white font-semibold text-lg md:text-xl mb-1 leading-snug">{item.category}</h3>
         <p className="text-white/90 text-sm md:text-base font-normal mb-5 leading-relaxed min-h-[3rem]">{item.title}</p>
         <button className="bg-[#FF6B35] hover:bg-[#ff8c42] text-white text-sm font-semibold py-2.5 px-8 rounded-full transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg">
-          Learn More
+          {t('whatIs.learnMore')}
         </button>
       </div>
     </div>

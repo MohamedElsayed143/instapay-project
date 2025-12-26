@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useLanguage } from '@/hooks/use-language';
 
 const banks = [
   { name: 'National Bank of Egypt', logo: 'https://slelguoygbfzlpylpxfs.supabase.co/storage/v1/object/public/test-clones/b9b52292-207e-4ad8-b62f-e104f3f495a0-instapay-eg/assets/images/111-1-150x150-18.jpg' },
@@ -19,6 +20,7 @@ const banks = [
 ];
 
 export function EnabledBanks() {
+  const { t, isRtl } = useLanguage();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [itemsPerView, setItemsPerView] = useState(5);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -60,16 +62,16 @@ export function EnabledBanks() {
 
       <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl md:text-5xl font-bold text-white text-center mb-12 font-cairo tracking-tight">
-          Enabled Banks
+          {t('enabledBanks.title')}
         </h2>
 
         <div className="relative group max-w-[1200px] mx-auto">
-          <button onClick={prevSlide} className="absolute -left-4 md:-left-12 top-1/2 -translate-y-1/2 z-30 p-2 text-white/70 hover:text-white transition-colors cursor-pointer hidden md:block" aria-label="Previous slide">
-            <ChevronLeft size={48} strokeWidth={1.5} />
+          <button onClick={isRtl ? nextSlide : prevSlide} className={`absolute ${isRtl ? '-right-4 md:-right-12' : '-left-4 md:-left-12'} top-1/2 -translate-y-1/2 z-30 p-2 text-white/70 hover:text-white transition-colors cursor-pointer hidden md:block`} aria-label="Previous slide">
+            {isRtl ? <ChevronRight size={48} strokeWidth={1.5} /> : <ChevronLeft size={48} strokeWidth={1.5} />}
           </button>
 
           <div className="overflow-hidden">
-            <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(-${currentSlide * (100 / itemsPerView)}%)` }}>
+            <div className="flex transition-transform duration-500 ease-out" style={{ transform: `translateX(${isRtl ? '' : '-'}${currentSlide * (100 / itemsPerView)}%)` }}>
               {banks.map((bank, index) => (
                 <div key={index} className="flex-shrink-0 px-3 md:px-4" style={{ width: `${100 / itemsPerView}%` }}>
                   <div className="bg-white rounded-xl aspect-square flex items-center justify-center p-6 shadow-lg transform transition-transform hover:scale-105 duration-300">
@@ -82,8 +84,8 @@ export function EnabledBanks() {
             </div>
           </div>
 
-           <button onClick={nextSlide} className="absolute -right-4 md:-right-12 top-1/2 -translate-y-1/2 z-30 p-2 text-white/70 hover:text-white transition-colors cursor-pointer hidden md:block" aria-label="Next slide">
-            <ChevronRight size={48} strokeWidth={1.5} />
+           <button onClick={isRtl ? prevSlide : nextSlide} className={`absolute ${isRtl ? '-left-4 md:-left-12' : '-right-4 md:-right-12'} top-1/2 -translate-y-1/2 z-30 p-2 text-white/70 hover:text-white transition-colors cursor-pointer hidden md:block`} aria-label="Next slide">
+            {isRtl ? <ChevronLeft size={48} strokeWidth={1.5} /> : <ChevronRight size={48} strokeWidth={1.5} />}
           </button>
         </div>
 

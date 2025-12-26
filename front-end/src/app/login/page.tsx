@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/hooks/use-language";
 import {
   Eye,
   EyeOff,
@@ -16,6 +17,7 @@ import {
 
 const Login = () => {
   const router = useRouter();
+  const { t, isRtl } = useLanguage();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [phone, setPhone] = useState("");
   const [fullName, setFullName] = useState("");
@@ -49,7 +51,7 @@ const Login = () => {
 
     try {
       const res = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: "POST",
+        method: "POST", 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -61,7 +63,7 @@ const Login = () => {
         if (isLoginMode) {
           localStorage.setItem("user", JSON.stringify(data.user));
           setMessage({
-            text: data.message || "Success! Accessing Secure Vault...",
+            text: t('login.success'),
             isError: false,
           });
           setTimeout(() => {
@@ -69,7 +71,7 @@ const Login = () => {
           }, 1000);
         } else {
           setMessage({ 
-            text: data.message || "Account Created Successfully!", 
+            text: t('login.accountCreated'), 
             isError: false 
           });
           setTimeout(() => setIsLoginMode(true), 2500);
@@ -77,12 +79,12 @@ const Login = () => {
       } else {
         // في حال أرسل الباك إند status = error
         setMessage({
-          text: data.message || "Identification failed",
+          text: data.message === "Identification failed" ? t('login.fail') : (data.message || t('login.fail')),
           isError: true,
         });
       }
     } catch (err) {
-      setMessage({ text: "Network Error. Please try again.", isError: true });
+      setMessage({ text: t('login.networkError'), isError: true });
     } finally {
       setLoading(false);
     }
@@ -108,8 +110,8 @@ const Login = () => {
           <h1 className="text-white text-3xl font-black tracking-tight mb-2 uppercase">
             Insta<span className="text-purple-500">Pay</span>
           </h1>
-          <p className="text-slate-400 text-xs font-bold tracking-[0.2em] flex items-center gap-2">
-            <ShieldCheck size={14} className="text-emerald-400" /> MILITARY-GRADE SECURITY
+          <p className="text-slate-400 text-xs font-bold tracking-[0.2em] flex items-center gap-2 justify-center">
+            <ShieldCheck size={14} className="text-emerald-400" /> {t('login.security')}
           </p>
         </div>
 
@@ -123,7 +125,7 @@ const Login = () => {
                 isLoginMode ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg" : "text-slate-500"
               }`}
             >
-              Login
+              {t('login.login')}
             </button>
             <button
               onClick={() => setIsLoginMode(false)}
@@ -131,48 +133,48 @@ const Login = () => {
                 !isLoginMode ? "bg-gradient-to-r from-purple-600 to-purple-500 text-white shadow-lg" : "text-slate-500"
               }`}
             >
-              Register
+              {t('login.register')}
             </button>
           </div>
 
           <div className="space-y-4">
             {!isLoginMode && (
               <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-purple-400" size={18} />
+                <User className={`absolute ${isRtl ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-purple-400`} size={18} />
                 <input
                   type="text"
-                  placeholder="Full Name"
+                  placeholder={t('login.fullName')}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-slate-600 outline-none focus:border-purple-500/50 transition-all"
+                  className={`w-full bg-white/5 border border-white/10 rounded-2xl py-4 ${isRtl ? 'pr-12 pl-4' : 'pl-12 pr-4'} text-white placeholder:text-slate-600 outline-none focus:border-purple-500/50 transition-all`}
                 />
               </div>
             )}
 
             <div className="relative group">
-              <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-purple-400" size={18} />
+              <Phone className={`absolute ${isRtl ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-purple-400`} size={18} />
               <input
                 type="text"
-                placeholder="Mobile Number"
+                placeholder={t('login.mobileNumber')}
                 value={phone}
                 onChange={handlePhoneChange}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-slate-600 outline-none focus:border-purple-500/50 transition-all"
+                className={`w-full bg-white/5 border border-white/10 rounded-2xl py-4 ${isRtl ? 'pr-12 pl-4' : 'pl-12 pr-4'} text-white placeholder:text-slate-600 outline-none focus:border-purple-500/50 transition-all`}
               />
             </div>
 
             <div className="relative group">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-purple-400" size={18} />
+              <Lock className={`absolute ${isRtl ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-purple-400`} size={18} />
               <input
                 type={showPassword ? "text" : "password"}
-                placeholder="Password"
+                placeholder={t('login.password')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-12 text-white placeholder:text-slate-600 outline-none focus:border-purple-500/50 transition-all"
+                className={`w-full bg-white/5 border border-white/10 rounded-2xl py-4 ${isRtl ? 'pr-12 pl-12' : 'pl-12 pr-12'} text-white placeholder:text-slate-600 outline-none focus:border-purple-500/50 transition-all`}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                className={`absolute ${isRtl ? 'left-4' : 'right-4'} top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors`}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -184,8 +186,8 @@ const Login = () => {
               className="w-full relative h-14 mt-4 overflow-hidden rounded-2xl bg-white text-black font-black text-xs uppercase tracking-[0.2em] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
-                {loading ? "Processing..." : isLoginMode ? "Login" : "Create Account"}
-                {!loading && <ArrowRight size={16} />}
+                {loading ? t('login.processing') : isLoginMode ? t('login.login') : t('login.createAccount')}
+                {!loading && <ArrowRight size={16} className={isRtl ? "rotate-180" : ""} />}
               </span>
             </button>
 
@@ -218,7 +220,7 @@ const Login = () => {
 
         {/* Footer */}
         <p className="text-center text-slate-600 text-[10px] font-bold uppercase tracking-[0.3em] mt-8">
-          &copy; 2025 InstaPay Egypt • Secure Session
+          {t('login.footer')}
         </p>
       </div>
 
