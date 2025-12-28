@@ -1,8 +1,0 @@
-{
-  "projectId": "370ba2a9-294f-49e8-b18e-c18386f8a20e",
-  "createdAt": 1766492794003,
-  "startupCommands": [
-    "cd back-end && php -S localhost:8000",
-    "cd front-end && bun run dev"
-  ]
-}
