@@ -9,7 +9,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit;
 }
 
-require_once "../config/db.php";
+require_once __DIR__ . "/../config/db.php";
+require_once __DIR__ . "/../config/lang.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
 $phone    = $data["phone"] ?? "";
@@ -19,7 +20,7 @@ $password = $data["password"] ?? "";
 if (!$phone || !$password) {
     echo json_encode([
         "status" => "error", 
-        "message" => "Mobile number and password required"
+        "message" => __("mobile_password_required")
     ]);
     exit;
 }
@@ -30,10 +31,10 @@ try {
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($user && password_verify($password, $user["password"])) {
-        // حالة النجاح (ستبقى كما هي)
+        
         echo json_encode([
             "status" => "success",
-            "message" => "Login successful",
+            "message" => __("login_success"),
             "user" => [
                 "id" => $user["id"],
                 "name" => $user["full_name"],
@@ -45,12 +46,12 @@ try {
         // تم إلغاء http_response_code(401) لضمان أن res.ok في الفرونت اند لا تفشل
         echo json_encode([
             "status" => "error", 
-            "message" => "Incorrect login details"
+            "message" => __("incorrect_login")
         ]);
     }
 } catch (PDOException $e) {
     echo json_encode([
         "status" => "error", 
-        "message" => "Server error"
+        "message" => __("server_error")
     ]);
 }

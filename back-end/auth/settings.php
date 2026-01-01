@@ -11,13 +11,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-require_once "../config/db.php";
+require_once __DIR__ . "/../config/db.php";
+require_once __DIR__ . "/../config/lang.php";
 
 // استقبال البيانات بصيغة JSON
 $data = json_decode(file_get_contents("php://input"), true);
 
 if (!$data || !isset($data['action']) || !isset($data['user_id'])) {
-    echo json_encode(["status" => "error", "message" => "Invalid request data"]);
+    echo json_encode(["status" => "error", "message" => __("invalid_request")]);
     exit;
 }
 
@@ -28,12 +29,12 @@ try {
     // 1. تحديث الاسم
     if ($action === "update_name") {
         $newName = trim($data['name'] ?? ""); 
-        if (empty($newName)) throw new Exception("Name is required");
+        if (empty($newName)) throw new Exception(__("all_fields_required"));
 
         $stmt = $pdo->prepare("UPDATE users SET full_name = ? WHERE id = ?");
         $stmt->execute([$newName, $userId]);
         
-        echo json_encode(["status" => "success", "message" => "Name updated successfully"]);
+        echo json_encode(["status" => "success", "message" => __("name_updated")]);
 
     // 2. تغيير كلمة المرور
     } elseif ($action === "change_password") {
@@ -41,7 +42,7 @@ try {
         $newPass = trim($data['newPassword'] ?? "");
 
         if (empty($oldPass) || empty($newPass)) {
-            throw new Exception("All fields are required");
+            throw new Exception(__("all_fields_required"));
         }
 
         // جلب كلمة المرور المخزنة للتأكد من الهوية
@@ -61,7 +62,7 @@ try {
             }
 
             if (!$isCorrect) {
-                echo json_encode(["status" => "error", "message" => "Current password is incorrect"]);
+                echo json_encode(["status" => "error", "message" => __("current_password_incorrect")]);
                 exit;
             }
 
@@ -69,7 +70,7 @@ try {
             if ($oldPass === $newPass) {
                 echo json_encode([
                     "status" => "error", 
-                    "message" => "New password cannot be the same as the current password"
+                    "message" => __("new_password_same")
                 ]);
                 exit;
             }
@@ -79,9 +80,9 @@ try {
             $update = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
             $update->execute([$hashedNewPass, $userId]);
             
-            echo json_encode(["status" => "success", "message" => "Password updated successfully"]);
+            echo json_encode(["status" => "success", "message" => __("password_changed")]);
         } else {
-            throw new Exception("User not found");
+            throw new Exception(__("user_not_found"));
         }
     }
 } catch (Exception $e) {

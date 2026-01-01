@@ -9,12 +9,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit;
 }
 
-require_once "../config/db.php";
+require_once __DIR__ . "/../config/db.php";
+require_once __DIR__ . "/../config/lang.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
 
 if (empty($data["sender_id"]) || empty($data["receiver_phone"]) || empty($data["amount"])) {
-    echo json_encode(["status" => "error", "message" => "Missing required data"]);
+    echo json_encode(["status" => "error", "message" => __("missing_data")]);
     exit;
 }
 
@@ -29,7 +30,7 @@ try {
     $sender = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$sender || $sender["balance"] < $amount) {
-        echo json_encode(["status" => "error", "message" => "Insufficient balance"]);
+        echo json_encode(["status" => "error", "message" => __("insufficient_balance")]);
         exit;
     }
 
@@ -39,12 +40,12 @@ try {
     $receiver = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$receiver) {
-        echo json_encode(["status" => "error", "message" => "This phone number is not registered"]);
+        echo json_encode(["status" => "error", "message" => __("phone_not_registered")]);
         exit;
     }
 
     if ($receiver['id'] == $sender_id) {
-        echo json_encode(["status" => "error", "message" => "You cannot transfer to yourself"]);
+        echo json_encode(["status" => "error", "message" => __("cannot_transfer_self")]);
         exit;
     }
 
@@ -61,7 +62,7 @@ try {
         (sender_id, receiver_id, receiver_phone, type, amount, service_name, account_reference, created_at) 
         VALUES (?, ?, ?, 'transfer', ?, ?, ?, NOW())");
     
-    $service_name = "Transfer to " . $receiver['full_name'];
+    $service_name = __("transfer_to") . $receiver['full_name'];
     $stmt->execute([
         $sender_id, 
         $receiver_id, 
@@ -72,11 +73,11 @@ try {
     ]);
 
     // 5. تسجيل إشعارات الطرفين
-    $pdo->prepare("INSERT INTO notifications (user_id, title, description, amount, type, is_read, created_at) VALUES (?, 'Money Sent', ?, ?, 'sent_funds', 1, NOW())")
-        ->execute([$sender_id, "Sent to " . $receiver['full_name'], $amount]);
+    $pdo->prepare("INSERT INTO notifications (user_id, title, description, amount, type, is_read, created_at) VALUES (?, ?, ?, ?, 'sent_funds', 1, NOW())")
+        ->execute([$sender_id, __("money_sent"), __("sent_to") . $receiver['full_name'], $amount]);
 
-    $pdo->prepare("INSERT INTO notifications (user_id, title, description, amount, type, is_read, created_at) VALUES (?, 'Money Received', ?, ?, 'received_funds', 0, NOW())")
-        ->execute([$receiver_id, "Received from " . $sender['full_name'], $amount]);
+    $pdo->prepare("INSERT INTO notifications (user_id, title, description, amount, type, is_read, created_at) VALUES (?, ?, ?, ?, 'received_funds', 0, NOW())")
+        ->execute([$receiver_id, __("money_received"), __("received_from") . $sender['full_name'], $amount]);
 
     $pdo->commit();
 
@@ -84,6 +85,6 @@ try {
 
 } catch (Exception $e) {
     if ($pdo->inTransaction()) $pdo->rollback();
-    echo json_encode(["status" => "error", "message" => "Server Error: " . $e->getMessage()]);
+    echo json_encode(["status" => "error", "message" => __("server_error")]);
 }
 ?>

@@ -6,12 +6,13 @@ header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') exit;
 
-require_once "../config/db.php";
+require_once __DIR__ . "/../config/db.php";
+require_once __DIR__ . "/../config/lang.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
 
 if (!isset($data['user_id'], $data['amount'], $data['service'], $data['meter'])) {
-    echo json_encode(["status" => "error", "message" => "Missing required data"]);
+    echo json_encode(["status" => "error", "message" => __("missing_data")]);
     exit;
 }
 
@@ -27,10 +28,10 @@ try {
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
 
-    if (!$user) throw new Exception("User not found");
+    if (!$user) throw new Exception(__("user_not_found"));
     
     if ($user['balance'] < $amount) {
-        throw new Exception("Insufficient balance. Current: " . $user['balance'] . " EGP");
+        throw new Exception(__("insufficient_balance_with_amount") . $user['balance'] . " EGP");
     }
 
     $updateBalance = $pdo->prepare("UPDATE users SET balance = balance - ? WHERE id = ?");
@@ -48,7 +49,7 @@ try {
 
     echo json_encode([
         "status" => "success", 
-        "message" => "Payment successful!",
+        "message" => __("payment_success"),
         "new_balance" => $user['balance'] - $amount
     ]);
 

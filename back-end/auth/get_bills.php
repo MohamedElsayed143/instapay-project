@@ -6,12 +6,13 @@ header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') exit;
 
-require_once "../config/db.php";
+require_once __DIR__ . "/../config/db.php";
+require_once __DIR__ . "/../config/lang.php";
 
 $userId = $_GET['user_id'] ?? null;
 
 if (!$userId) {
-    echo json_encode(["status" => "error", "message" => "User ID required", "bills" => []]);
+    echo json_encode(["status" => "error", "message" => __("user_id_required"), "bills" => []]);
     exit;
 }
 
@@ -40,7 +41,7 @@ try {
 } catch (Exception $e) {
     echo json_encode([
         "status" => "error", 
-        "message" => "Database error", 
+        "message" => __("server_error"), 
         "bills" => []
     ]);
 }

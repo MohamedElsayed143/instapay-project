@@ -5,7 +5,7 @@ header("Access-Control-Allow-Headers: Content-Type");
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') exit;
 
-require_once "../config/db.php";
+require_once __DIR__ . "/../config/db.php";
 
 if (!isset($_FILES['avatar']) || !isset($_POST['user_id'])) {
     echo json_encode(["status" => "error", "message" => "Missing file or user ID"]);

@@ -11,7 +11,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 }
 
 // تأكد من صحة المسار لملف db.php
-require_once "../config/db.php"; 
+require_once __DIR__ . "/../config/db.php"; 
+require_once __DIR__ . "/../config/lang.php"; 
 
 $data = json_decode(file_get_contents("php://input"), true);
 
@@ -20,7 +21,7 @@ $payer_phone  = $data['payer_phone'] ?? null;
 $amount       = $data['amount'] ?? null;
 
 if (!$requester_id || !$payer_phone || !$amount) {
-    echo json_encode(["status" => "error", "message" => "Missing data"]);
+    echo json_encode(["status" => "error", "message" => __("missing_data")]);
     exit;
 }
 
@@ -31,7 +32,7 @@ try {
     $payer = $stmt->fetch();
 
     if (!$payer) {
-        echo json_encode(["status" => "error", "message" => "Payer not found"]);
+        echo json_encode(["status" => "error", "message" => __("payer_not_found")]);
         exit;
     }
 
@@ -44,10 +45,10 @@ try {
     $request_id = $pdo->lastInsertId();
 
     // إدخال الإشعار
-    $stmt = $pdo->prepare("INSERT INTO notifications (user_id, title, description, amount, type, request_id, is_read) VALUES (?, 'Payment Request', 'New money request received', ?, 'payment_request', ?, 0)");
-    $stmt->execute([$payer_id, $amount, $request_id]);
+    $stmt = $pdo->prepare("INSERT INTO notifications (user_id, title, description, amount, type, request_id, is_read) VALUES (?, ?, ?, ?, 'payment_request', ?, 0)");
+    $stmt->execute([$payer_id, __("payment_request"), __("new_money_request"), $amount, $request_id]);
 
-    echo json_encode(["status" => "success", "message" => "Sent successfully"]);
+    echo json_encode(["status" => "success", "message" => __("sent_successfully")]);
 
 } catch (Exception $e) {
     echo json_encode(["status" => "error", "message" => $e->getMessage()]);

@@ -1,7 +1,7 @@
 <?php
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
-require_once "../config/db.php";
+require_once __DIR__ . "/../config/db.php";
 
 try {
     // استعلام متطور يربط جدول العمليات بجدول المستخدمين مرتين لضمان جلب بيانات الأدمن واليوزرز

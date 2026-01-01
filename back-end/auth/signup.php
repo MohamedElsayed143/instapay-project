@@ -1,7 +1,7 @@
 <?php
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
@@ -9,46 +9,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit;
 }
 
-require_once "../config/db.php";
+require_once __DIR__ . "/../config/db.php";
+require_once __DIR__ . "/../config/lang.php";
 
 $data = json_decode(file_get_contents("php://input"), true);
-$fullName = $data["fullName"] ?? "";
-$phone    = $data["phone"] ?? "";
-$password = $data["password"] ?? "";
 
-if (!$fullName || !$phone || !$password) {
-    // نرسل status => error ليظهر اللون الأحمر في الفرونت
+// تأكد من مطابقة الحروف الكبيرة والصغيرة مع React
+$full_name = $data["fullName"] ?? ""; 
+$phone     = $data["phone"] ?? "";
+$password  = $data["password"] ?? "";
+
+if (empty($full_name) || empty($phone) || empty($password)) {
     echo json_encode([
-        "status" => "error",
-        "message" => "All fields are required"
+        "status" => "error", 
+        "message" => __("all_fields_required")
     ]);
     exit;
 }
 
-$hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
 try {
-    $stmt = $pdo->prepare(
-        "INSERT INTO users (full_name, phone, password, role) VALUES (?, ?, ?, 'user')"
-    );
-    $stmt->execute([$fullName, $phone, $hashedPassword]);
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+    // تأكد أن أسماء الأعمدة في قاعدة البيانات صحيحة (full_name, phone, password, role, balance)
+    $stmt = $pdo->prepare("INSERT INTO users (full_name, phone, password, role, balance) VALUES (?, ?, ?, 'user', 5000)");
+    $stmt->execute([$full_name, $phone, $hashedPassword]);
 
-    // الإضافة الحاسمة: status => success لضمان ظهور اللون الأخضر
     echo json_encode([
         "status" => "success",
-        "message" => "Account created successfully"
+        "message" => __("account_created")
     ]);
-
 } catch (PDOException $e) {
     if ($e->getCode() == 23000) {
-        echo json_encode([
-            "status" => "error",
-            "message" => "The mobile number is already registered"
-        ]);
+        echo json_encode(["status" => "error", "message" => __("phone_already_registered")]);
     } else {
-        echo json_encode([
-            "status" => "error", 
-            "message" => "Server error: " . $e->getMessage()
-        ]);
+        // هذا السطر يساعدك في معرفة الخطأ الحقيقي أثناء البرمجة
+        echo json_encode(["status" => "error", "message" => "Database Error: " . $e->getMessage()]);
     }
 }
