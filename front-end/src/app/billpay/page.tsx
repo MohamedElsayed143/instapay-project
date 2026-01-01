@@ -21,6 +21,7 @@ import {
   X,
   AlertTriangle,
 } from "lucide-react";
+import { API_BASE_URL } from "@/lib/utils";
 
 export default function BillPaymentPage() {
   const { t, isRtl } = useLanguage();
@@ -55,10 +56,30 @@ export default function BillPaymentPage() {
   };
 
   const services = [
-    { id: "electricity", icon: Lightbulb, label: t('bill.electricity'), color: "text-yellow-500" },
-    { id: "water", icon: Droplet, label: t('bill.water'), color: "text-blue-500" },
-    { id: "mobile", icon: Phone, label: t('bill.mobile'), color: "text-green-500" },
-    { id: "internet", icon: Wifi, label: t('bill.internet'), color: "text-purple-500" },
+    {
+      id: "electricity",
+      icon: Lightbulb,
+      label: t("bill.electricity"),
+      color: "text-yellow-500",
+    },
+    {
+      id: "water",
+      icon: Droplet,
+      label: t("bill.water"),
+      color: "text-blue-500",
+    },
+    {
+      id: "mobile",
+      icon: Phone,
+      label: t("bill.mobile"),
+      color: "text-green-500",
+    },
+    {
+      id: "internet",
+      icon: Wifi,
+      label: t("bill.internet"),
+      color: "text-purple-500",
+    },
   ];
 
   const quickAmounts = [50, 100, 150, 200, 300];
@@ -67,7 +88,7 @@ export default function BillPaymentPage() {
     const id = getUserId();
     if (!id) return;
     try {
-      const res = await fetch(`http://localhost/instapay-backend/auth/get_user.php?id=${id}`);
+      const res = await fetch(`${API_BASE_URL}/auth/get_user.php?id=${id}`);
       if (!res.ok) throw new Error();
       const data = await res.json();
       if (data.status === "success") setUserBalance(Number(data.user.balance));
@@ -80,7 +101,9 @@ export default function BillPaymentPage() {
     const id = getUserId();
     if (!id) return;
     try {
-      const res = await fetch(`http://localhost/instapay-backend/auth/get_bills.php?user_id=${id}`);
+      const res = await fetch(
+        `${API_BASE_URL}/auth/get_bills.php?user_id=${id}`
+      );
       if (!res.ok) throw new Error();
       const data = await res.json();
       if (data.status === "success") {
@@ -100,20 +123,23 @@ export default function BillPaymentPage() {
     const billId = showConfirm.billId;
     if (!billId) return;
     try {
-      const res = await fetch("http://localhost/instapay-backend/auth/delete_bill.php", {
+      const res = await fetch("${API_BASE_URL}/auth/delete_bill.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ bill_id: billId }),
       });
       const data = await res.json();
       if (data.status === "success") {
-        setStatusMsg({ type: "success", text: t('bill.recordRemoved') });
+        setStatusMsg({ type: "success", text: t("bill.recordRemoved") });
         fetchRecentBills();
       } else {
-        setStatusMsg({ type: "error", text: data.message || t('bill.deleteFailed') });
+        setStatusMsg({
+          type: "error",
+          text: data.message || t("bill.deleteFailed"),
+        });
       }
     } catch (err) {
-      setStatusMsg({ type: "error", text: t('bill.connError') });
+      setStatusMsg({ type: "error", text: t("bill.connError") });
     } finally {
       setShowConfirm({ show: false, billId: null });
     }
@@ -122,17 +148,29 @@ export default function BillPaymentPage() {
   const handlePayNow = async () => {
     const userId = getUserId();
     if (!accountNumber || !amount) {
-      setStatusMsg({ type: "error", text: t('bill.fillFields') });
+      setStatusMsg({ type: "error", text: t("bill.fillFields") });
       return;
     }
+
+    // 2. التحقق من أن القيمة أكبر من صفر
+    if (parseFloat(amount) <= 0) {
+      setStatusMsg({
+        type: "error",
+        text: isRtl
+          ? "برجاء إدخال مبلغ صحيح أكبر من 0"
+          : "Please enter a valid amount greater than 0",
+      });
+      return;
+    }
+
     if (Number(amount) > userBalance) {
-      setStatusMsg({ type: "error", text: t('bill.lowBalance') });
+      setStatusMsg({ type: "error", text: t("bill.lowBalance") });
       return;
     }
 
     setLoading(true);
     try {
-      const response = await fetch("http://localhost/instapay-backend/auth/pay_bill.php", {
+      const response = await fetch("${API_BASE_URL}/auth/pay_bill.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -145,271 +183,380 @@ export default function BillPaymentPage() {
 
       const data = await response.json();
       if (data.status === "success") {
-        setStatusMsg({ type: "success", text: t('bill.paySuccess') });
+        setStatusMsg({ type: "success", text: t("bill.paySuccess") });
         setAccountNumber("");
         setAmount("");
         fetchBalance();
         fetchRecentBills();
       } else {
-        setStatusMsg({ type: "error", text: data.message || t('bill.payDeclined') });
+        setStatusMsg({
+          type: "error",
+          text: data.message || t("bill.payDeclined"),
+        });
       }
     } catch (error) {
-      setStatusMsg({ type: "error", text: t('bill.connError') });
+      setStatusMsg({ type: "error", text: t("bill.connError") });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-orange-50 font-sans" dir={isRtl ? "rtl" : "ltr"}>
+    <div
+      className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-orange-50 font-sans"
+      dir={isRtl ? "rtl" : "ltr"}
+    >
       {/* Toast Messages */}
       {statusMsg && (
         <div
           className={`fixed top-10 right-10 z-[100] p-4 rounded-2xl shadow-2xl flex items-center gap-4 animate-in slide-in-from-right duration-500 border-l-4 ${
-            statusMsg.type === "success" ? "bg-white border-green-500" : "bg-white border-red-500"
+            statusMsg.type === "success"
+              ? "bg-white border-green-500"
+              : "bg-white border-red-500"
           }`}
         >
-          <div className={`p-2 rounded-full ${statusMsg.type === "success" ? "bg-green-100" : "bg-red-100"}`}>
+          <div
+            className={`p-2 rounded-full ${
+              statusMsg.type === "success" ? "bg-green-100" : "bg-red-100"
+            }`}
+          >
             {statusMsg.type === "success" ? (
               <CheckCircle className="w-5 h-5 text-green-600" />
             ) : (
               <AlertCircle className="w-5 h-5 text-red-600" />
             )}
           </div>
-            <div>
-              <p className="font-black text-gray-800 text-[10px] uppercase tracking-widest">
-                {statusMsg.type === "success" ? t('bill.success') : t('bill.attention')}
-              </p>
-              <p className="text-sm text-gray-500 font-bold">{statusMsg.text}</p>
-            </div>
-            <button onClick={() => setStatusMsg(null)} className="ml-2 text-gray-300 hover:text-gray-600">
-              <X className="w-4 h-4" />
-            </button>
+          <div>
+            <p className="font-black text-gray-800 text-[10px] uppercase tracking-widest">
+              {statusMsg.type === "success"
+                ? t("bill.success")
+                : t("bill.attention")}
+            </p>
+            <p className="text-sm text-gray-500 font-bold">{statusMsg.text}</p>
           </div>
-        )}
-  
-        {/* Delete Confirmation Modal */}
-        {showConfirm.show && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-            <div
-              className="absolute inset-0 bg-purple-900/40 backdrop-blur-sm animate-in fade-in duration-300"
-              onClick={() => setShowConfirm({ show: false, billId: null })}
-            ></div>
-            <div className="bg-white rounded-[2rem] p-8 shadow-2xl max-w-sm w-full relative z-[120] animate-in zoom-in-95 duration-200 text-center border border-purple-100">
-              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-500">
-                <AlertTriangle className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-black text-gray-900 mb-2 italic">{t('bill.removeActivity')}</h3>
-              <p className="text-gray-500 font-medium mb-8">{t('bill.confirmDelete')}</p>
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  onClick={() => setShowConfirm({ show: false, billId: null })}
-                  className="py-3 px-6 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-2xl transition-all"
-                >
-                  {t('bill.cancel')}
-                </button>
-                <button
-                  onClick={executeDelete}
-                  className="py-3 px-6 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-all"
-                >
-                  {t('bill.yesDelete')}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-  
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <Link
-            href="/dashboard"
-            className={`flex items-center gap-2 text-gray-500 hover:text-purple-600 font-bold mb-8 transition-all group w-fit ${isRtl ? 'flex-row-reverse' : ''}`}
+          <button
+            onClick={() => setStatusMsg(null)}
+            className="ml-2 text-gray-300 hover:text-gray-600"
           >
-            <ArrowLeft className={`w-5 h-5 transition-transform ${isRtl ? 'rotate-180 group-hover:translate-x-1' : 'group-hover:-translate-x-1'}`} />
-            {t('send.back')}
-          </Link>
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
-          <div className="grid lg:grid-cols-3 gap-10">
-            <div className="lg:col-span-2 space-y-8">
-              <header className={isRtl ? 'text-right' : ''}>
-                <h1 className="text-4xl font-black text-gray-900 mb-2 italic tracking-tight">
-                  {t('bill.title')}
-                </h1>
-                <p className="text-gray-500 font-medium">{t('bill.desc')}</p>
-              </header>
+      {/* Delete Confirmation Modal */}
+      {showConfirm.show && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-purple-900/40 backdrop-blur-sm animate-in fade-in duration-300"
+            onClick={() => setShowConfirm({ show: false, billId: null })}
+          ></div>
+          <div className="bg-white rounded-[2rem] p-8 shadow-2xl max-w-sm w-full relative z-[120] animate-in zoom-in-95 duration-200 text-center border border-purple-100">
+            <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-500">
+              <AlertTriangle className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-black text-gray-900 mb-2 italic">
+              {t("bill.removeActivity")}
+            </h3>
+            <p className="text-gray-500 font-medium mb-8">
+              {t("bill.confirmDelete")}
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => setShowConfirm({ show: false, billId: null })}
+                className="py-3 px-6 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-2xl transition-all"
+              >
+                {t("bill.cancel")}
+              </button>
+              <button
+                onClick={executeDelete}
+                className="py-3 px-6 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-all"
+              >
+                {t("bill.yesDelete")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-              {/* Balance Card */}
-              <div className="bg-gradient-to-br from-purple-600 to-orange-500 rounded-[2.5rem] p-8 text-white shadow-2xl transition-all hover:shadow-purple-200">
-                <p className={`text-white/70 font-bold uppercase text-[10px] tracking-[0.2em] mb-2 ${isRtl ? 'text-right' : ''}`}>
-                  {t('dash.balance')}
-                </p>
-                <h3 className={`text-4xl font-black ${isRtl ? 'text-right flex flex-row-reverse gap-2' : ''}`}>
-                  {userBalance.toLocaleString()}{" "}
-                  <span className="text-lg font-medium opacity-70 italic">EGP</span>
-                </h3>
-                <div className={`mt-6 flex items-center gap-2 bg-white/20 backdrop-blur-md w-fit px-4 py-2 rounded-xl border border-white/30 ${isRtl ? 'mr-auto' : ''}`}>
-                  <CheckCircle className="w-4 h-4 text-white" />
-                  <span className="text-xs font-bold uppercase tracking-widest">
-                    InstaPay Secure Wallet
-                  </span>
-                </div>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <Link
+          href="/dashboard"
+          className={`flex items-center gap-2 text-gray-500 hover:text-purple-600 font-bold mb-8 transition-all group w-fit ${
+            isRtl ? "flex-row-reverse" : ""
+          }`}
+        >
+          <ArrowLeft
+            className={`w-5 h-5 transition-transform ${
+              isRtl
+                ? "rotate-180 group-hover:translate-x-1"
+                : "group-hover:-translate-x-1"
+            }`}
+          />
+          {t("send.back")}
+        </Link>
+
+        <div className="grid lg:grid-cols-3 gap-10">
+          <div className="lg:col-span-2 space-y-8">
+            <header className={isRtl ? "text-right" : ""}>
+              <h1 className="text-4xl font-black text-gray-900 mb-2 italic tracking-tight">
+                {t("bill.title")}
+              </h1>
+              <p className="text-gray-500 font-medium">{t("bill.desc")}</p>
+            </header>
+
+            {/* Balance Card */}
+            <div className="bg-gradient-to-br from-purple-600 to-orange-500 rounded-[2.5rem] p-8 text-white shadow-2xl transition-all hover:shadow-purple-200">
+              <p
+                className={`text-white/70 font-bold uppercase text-[10px] tracking-[0.2em] mb-2 ${
+                  isRtl ? "text-right" : ""
+                }`}
+              >
+                {t("dash.balance")}
+              </p>
+              <h3
+                className={`text-4xl font-black ${
+                  isRtl ? "text-right flex flex-row-reverse gap-2" : ""
+                }`}
+              >
+                {userBalance.toLocaleString()}{" "}
+                <span className="text-lg font-medium opacity-70 italic">
+                  EGP
+                </span>
+              </h3>
+              <div
+                className={`mt-6 flex items-center gap-2 bg-white/20 backdrop-blur-md w-fit px-4 py-2 rounded-xl border border-white/30 ${
+                  isRtl ? "mr-auto" : ""
+                }`}
+              >
+                <CheckCircle className="w-4 h-4 text-white" />
+                <span className="text-xs font-bold uppercase tracking-widest">
+                  InstaPay Secure Wallet
+                </span>
               </div>
+            </div>
 
-              {/* Payment Form */}
-              <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-purple-50">
-                <h2 className={`text-xl font-bold text-gray-800 mb-8 flex items-center gap-3 italic ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
-                  <div className="p-2 bg-orange-50 rounded-lg">
-                    <FileText className="w-5 h-5 text-orange-500" />
-                  </div>
-                  {t('bill.details')}
-                </h2>
+            {/* Payment Form */}
+            <div className="bg-white rounded-[2.5rem] p-8 shadow-xl border border-purple-50">
+              <h2
+                className={`text-xl font-bold text-gray-800 mb-8 flex items-center gap-3 italic ${
+                  isRtl ? "flex-row-reverse text-right" : ""
+                }`}
+              >
+                <div className="p-2 bg-orange-50 rounded-lg">
+                  <FileText className="w-5 h-5 text-orange-500" />
+                </div>
+                {t("bill.details")}
+              </h2>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                  {services.map((service) => (
-                    <button
-                      key={service.id}
-                      onClick={() => setSelectedService(service.id)}
-                      className={`flex flex-col items-center gap-3 p-6 rounded-3xl border-2 transition-all ${
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                {services.map((service) => (
+                  <button
+                    key={service.id}
+                    onClick={() => setSelectedService(service.id)}
+                    className={`flex flex-col items-center gap-3 p-6 rounded-3xl border-2 transition-all ${
+                      selectedService === service.id
+                        ? "border-purple-600 bg-purple-50 shadow-md scale-105"
+                        : "border-gray-50 hover:border-purple-200 bg-gray-50/50"
+                    }`}
+                  >
+                    <service.icon
+                      className={`w-7 h-7 ${
                         selectedService === service.id
-                          ? "border-purple-600 bg-purple-50 shadow-md scale-105"
-                          : "border-gray-50 hover:border-purple-200 bg-gray-50/50"
+                          ? service.color
+                          : "text-gray-300"
+                      }`}
+                    />
+                    <span
+                      className={`text-[10px] font-black uppercase tracking-widest ${
+                        selectedService === service.id
+                          ? "text-purple-700"
+                          : "text-gray-500"
                       }`}
                     >
-                      <service.icon
-                        className={`w-7 h-7 ${
-                          selectedService === service.id ? service.color : "text-gray-300"
-                        }`}
-                      />
-                      <span
-                        className={`text-[10px] font-black uppercase tracking-widest ${
-                          selectedService === service.id ? "text-purple-700" : "text-gray-500"
-                        }`}
-                      >
-                        {service.label}
-                      </span>
+                      {service.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label
+                    className={`text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block italic ${
+                      isRtl ? "text-right mr-1" : "ml-1"
+                    }`}
+                  >
+                    {t("bill.meter")}
+                  </label>
+                  <div
+                    className={`flex items-center bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 focus-within:bg-white focus-within:border-purple-400 transition-all ${
+                      isRtl ? "flex-row-reverse" : ""
+                    }`}
+                  >
+                    <CreditCard
+                      className={`w-5 h-5 text-gray-300 ${
+                        isRtl ? "ml-4" : "mr-4"
+                      }`}
+                    />
+                    <input
+                      type="text"
+                      placeholder="e.g. 1000293847"
+                      value={accountNumber}
+                      onChange={(e) => setAccountNumber(e.target.value)}
+                      className={`bg-transparent flex-1 outline-none text-gray-700 font-bold ${
+                        isRtl ? "text-right" : ""
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label
+                    className={`text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block italic ${
+                      isRtl ? "text-right mr-1" : "ml-1"
+                    }`}
+                  >
+                    {t("send.amount")}
+                  </label>
+                  <div
+                    className={`flex items-center bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 focus-within:bg-white focus-within:border-orange-400 transition-all ${
+                      isRtl ? "flex-row-reverse" : ""
+                    }`}
+                  >
+                    <Coins
+                      className={`w-5 h-5 text-gray-300 ${
+                        isRtl ? "ml-4" : "mr-4"
+                      }`}
+                    />
+                    <input
+                      type="number"
+                      placeholder="0.00"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className={`bg-transparent flex-1 outline-none text-2xl font-black text-gray-800 tracking-tighter ${
+                        isRtl ? "text-right" : ""
+                      }`}
+                    />
+                    <span className="font-black text-purple-600 italic">
+                      EGP
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  className={`flex gap-2 flex-wrap ${
+                    isRtl ? "flex-row-reverse" : ""
+                  }`}
+                >
+                  {quickAmounts.map((amt) => (
+                    <button
+                      key={amt}
+                      onClick={() => setAmount(amt.toString())}
+                      className="px-5 py-2.5 bg-white border border-gray-100 hover:border-purple-600 hover:text-purple-600 text-gray-500 text-[10px] font-black rounded-xl shadow-sm transition-all"
+                    >
+                      {amt} EGP
                     </button>
                   ))}
                 </div>
 
-                <div className="space-y-6">
-                  <div>
-                    <label className={`text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block italic ${isRtl ? 'text-right mr-1' : 'ml-1'}`}>
-                      {t('bill.meter')}
-                    </label>
-                    <div className={`flex items-center bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 focus-within:bg-white focus-within:border-purple-400 transition-all ${isRtl ? 'flex-row-reverse' : ''}`}>
-                      <CreditCard className={`w-5 h-5 text-gray-300 ${isRtl ? 'ml-4' : 'mr-4'}`} />
-                      <input
-                        type="text"
-                        placeholder="e.g. 1000293847"
-                        value={accountNumber}
-                        onChange={(e) => setAccountNumber(e.target.value)}
-                        className={`bg-transparent flex-1 outline-none text-gray-700 font-bold ${isRtl ? 'text-right' : ''}`}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className={`text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block italic ${isRtl ? 'text-right mr-1' : 'ml-1'}`}>
-                      {t('send.amount')}
-                    </label>
-                    <div className={`flex items-center bg-gray-50 border border-gray-100 rounded-2xl px-5 py-4 focus-within:bg-white focus-within:border-orange-400 transition-all ${isRtl ? 'flex-row-reverse' : ''}`}>
-                      <Coins className={`w-5 h-5 text-gray-300 ${isRtl ? 'ml-4' : 'mr-4'}`} />
-                      <input
-                        type="number"
-                        placeholder="0.00"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        className={`bg-transparent flex-1 outline-none text-2xl font-black text-gray-800 tracking-tighter ${isRtl ? 'text-right' : ''}`}
-                      />
-                      <span className="font-black text-purple-600 italic">EGP</span>
-                    </div>
-                  </div>
-
-                  <div className={`flex gap-2 flex-wrap ${isRtl ? 'flex-row-reverse' : ''}`}>
-                    {quickAmounts.map((amt) => (
-                      <button
-                        key={amt}
-                        onClick={() => setAmount(amt.toString())}
-                        className="px-5 py-2.5 bg-white border border-gray-100 hover:border-purple-600 hover:text-purple-600 text-gray-500 text-[10px] font-black rounded-xl shadow-sm transition-all"
-                      >
-                        {amt} EGP
-                      </button>
-                    ))}
-                  </div>
-
-                  <button
-                    onClick={handlePayNow}
-                    disabled={loading}
-                    className={`w-full bg-gradient-to-r from-purple-600 to-orange-500 text-white font-black py-5 rounded-[1.5rem] hover:shadow-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 active:scale-[0.98] ${isRtl ? 'flex-row-reverse' : ''}`}
-                  >
-                    {loading ? (
-                      <RefreshCw className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <Zap className="w-5 h-5" />
-                    )}
-                    {loading ? t('login.processing') : t('bill.payNow')}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Activity Sidebar */}
-            <div className="space-y-6">
-              <div className="bg-white rounded-[2rem] p-6 shadow-lg border border-purple-50">
-                <h3 className={`text-lg font-black text-gray-800 mb-6 flex items-center gap-2 italic ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
-                  <Calendar className="w-5 h-5 text-purple-600" /> {t('bill.history')}
-                </h3>
-                <div className="space-y-4">
-                  {recentBills.length > 0 ? (
-                    recentBills.map((bill) => (
-                      <div
-                        key={bill.id}
-                        className={`p-4 bg-gray-50 rounded-2xl border border-gray-100 flex justify-between items-center group hover:bg-white hover:shadow-md transition-all ${isRtl ? 'flex-row-reverse' : ''}`}
-                      >
-                        <div className={`flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                          <div
-                            onClick={() => setShowConfirm({ show: true, billId: bill.id })}
-                            className="p-2 bg-white text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition-all shadow-sm"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </div>
-                          <div className={isRtl ? 'text-right' : ''}>
-                            <p className="text-[12px] font-black text-gray-700 capitalize italic tracking-tight">
-                              {bill.service_name ? t('bill.' + bill.service_name.toLowerCase()) : t('bill.utilityBill')}
-                            </p>
-                            <p className="text-[10px] text-gray-400 font-bold uppercase">
-                              {bill.payment_date
-                                ? new Date(bill.payment_date).toLocaleDateString()
-                                : "No Date"}
-                            </p>
-                          </div>
-                        </div>
-                        <p className="text-sm font-black text-purple-600 italic">
-                          -{bill.amount} EGP
-                        </p>
-                      </div>
-                    ))
+                <button
+                  onClick={handlePayNow}
+                  disabled={loading}
+                  className={`w-full bg-gradient-to-r from-purple-600 to-orange-500 text-white font-black py-5 rounded-[1.5rem] hover:shadow-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 active:scale-[0.98] ${
+                    isRtl ? "flex-row-reverse" : ""
+                  }`}
+                >
+                  {loading ? (
+                    <RefreshCw className="w-5 h-5 animate-spin" />
                   ) : (
-                    <div className="p-10 text-center">
-                      <p className="text-gray-400 text-[10px] font-black uppercase italic">
-                        {t('bill.noBills')}
-                      </p>
-                    </div>
+                    <Zap className="w-5 h-5" />
                   )}
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-br from-purple-600 to-purple-800 rounded-[2rem] p-6 text-white shadow-lg">
-                <h3 className={`font-black mb-2 flex items-center gap-2 italic uppercase tracking-widest text-[10px] ${isRtl ? 'flex-row-reverse text-right' : ''}`}>
-                  <Zap className="w-3 h-3 text-orange-400" /> {t('bill.secTip')}
-                </h3>
-                <p className={`text-[11px] text-purple-100 leading-relaxed font-bold tracking-tight opacity-90 ${isRtl ? 'text-right' : ''}`}>
-                  {t('bill.secTipDesc')}
-                </p>
+                  {loading ? t("login.processing") : t("bill.payNow")}
+                </button>
               </div>
             </div>
           </div>
-        </div>
 
+          {/* Activity Sidebar */}
+          <div className="space-y-6">
+            <div className="bg-white rounded-[2rem] p-6 shadow-lg border border-purple-50">
+              <h3
+                className={`text-lg font-black text-gray-800 mb-6 flex items-center gap-2 italic ${
+                  isRtl ? "flex-row-reverse text-right" : ""
+                }`}
+              >
+                <Calendar className="w-5 h-5 text-purple-600" />{" "}
+                {t("bill.history")}
+              </h3>
+              <div className="space-y-4">
+                {recentBills.length > 0 ? (
+                  recentBills.map((bill) => (
+                    <div
+                      key={bill.id}
+                      className={`p-4 bg-gray-50 rounded-2xl border border-gray-100 flex justify-between items-center group hover:bg-white hover:shadow-md transition-all ${
+                        isRtl ? "flex-row-reverse" : ""
+                      }`}
+                    >
+                      <div
+                        className={`flex items-center gap-3 ${
+                          isRtl ? "flex-row-reverse" : ""
+                        }`}
+                      >
+                        <div
+                          onClick={() =>
+                            setShowConfirm({ show: true, billId: bill.id })
+                          }
+                          className="p-2 bg-white text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition-all shadow-sm"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </div>
+                        <div className={isRtl ? "text-right" : ""}>
+                          <p className="text-[12px] font-black text-gray-700 capitalize italic tracking-tight">
+                            {bill.service_name
+                              ? t("bill." + bill.service_name.toLowerCase())
+                              : t("bill.utilityBill")}
+                          </p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase">
+                            {bill.payment_date
+                              ? new Date(bill.payment_date).toLocaleDateString()
+                              : "No Date"}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-sm font-black text-purple-600 italic">
+                        -{bill.amount} EGP
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-10 text-center">
+                    <p className="text-gray-400 text-[10px] font-black uppercase italic">
+                      {t("bill.noBills")}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-600 to-purple-800 rounded-[2rem] p-6 text-white shadow-lg">
+              <h3
+                className={`font-black mb-2 flex items-center gap-2 italic uppercase tracking-widest text-[10px] ${
+                  isRtl ? "flex-row-reverse text-right" : ""
+                }`}
+              >
+                <Zap className="w-3 h-3 text-orange-400" /> {t("bill.secTip")}
+              </h3>
+              <p
+                className={`text-[11px] text-purple-100 leading-relaxed font-bold tracking-tight opacity-90 ${
+                  isRtl ? "text-right" : ""
+                }`}
+              >
+                {t("bill.secTipDesc")}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

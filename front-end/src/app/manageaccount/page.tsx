@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
+import { API_BASE_URL } from "@/lib/utils";
 
 interface UserData {
   id: string;
@@ -31,7 +32,9 @@ interface UserData {
 
 export default function ManageAccountsPage() {
   const { t, isRtl } = useLanguage();
-  const [activeTab, setActiveTab] = useState<"accounts" | "profile">("accounts");
+  const [activeTab, setActiveTab] = useState<"accounts" | "profile">(
+    "accounts"
+  );
   const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -57,7 +60,7 @@ export default function ManageAccountsPage() {
   const fetchUserData = useCallback(async (userId: string) => {
     try {
       const response = await fetch(
-        `http://localhost/instapay-backend/auth/get_user.php?id=${userId}`
+        `${API_BASE_URL}/auth/get_user.php?id=${userId}`
       );
       const data = await response.json();
 
@@ -99,16 +102,13 @@ export default function ManageAccountsPage() {
 
     setUpdating(true);
     try {
-      const response = await fetch(
-        "http://localhost/instapay-backend/auth/upload_avatar.php",
-        {
-          method: "POST",
-          body: formData, // لا نضع headers لـ FormData المتصفح يضعها تلقائياً
-        }
-      );
+      const response = await fetch("${API_BASE_URL}/auth/upload_avatar.php", {
+        method: "POST",
+        body: formData, // لا نضع headers لـ FormData المتصفح يضعها تلقائياً
+      });
       const data = await response.json();
       if (data.status === "success") {
-        showToast("success", t('manage.picUpdated'));
+        showToast("success", t("manage.picUpdated"));
         fetchUserData(user.id);
       } else {
         showToast("error", data.message);
@@ -124,21 +124,18 @@ export default function ManageAccountsPage() {
     if (!newName || newName === user?.full_name) return;
     setUpdating(true);
     try {
-      const response = await fetch(
-        "http://localhost/instapay-backend/auth/settings.php",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "update_name",
-            name: newName,
-            user_id: user?.id,
-          }),
-        }
-      );
+      const response = await fetch("${API_BASE_URL}/auth/settings.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_name",
+          name: newName,
+          user_id: user?.id,
+        }),
+      });
       const data = await response.json();
       if (data.status === "success") {
-        showToast("success", t('manage.nameUpdated'));
+        showToast("success", t("manage.nameUpdated"));
         if (user) fetchUserData(user.id);
       } else showToast("error", data.message);
     } catch {
@@ -151,25 +148,22 @@ export default function ManageAccountsPage() {
   const handleChangePassword = async () => {
     if (!oldPassword || !newPassword)
       return showToast("error", "All fields are required");
-    
+
     setUpdating(true);
     try {
-      const response = await fetch(
-        "http://localhost/instapay-backend/auth/settings.php",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "change_password",
-            oldPassword,
-            newPassword,
-            user_id: user?.id,
-          }),
-        }
-      );
+      const response = await fetch("${API_BASE_URL}/auth/settings.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "change_password",
+          oldPassword,
+          newPassword,
+          user_id: user?.id,
+        }),
+      });
       const data = await response.json();
       if (data.status === "success") {
-        showToast("success", t('manage.passUpdated'));
+        showToast("success", t("manage.passUpdated"));
         setOldPassword("");
         setNewPassword("");
       } else showToast("error", data.message);
@@ -204,7 +198,10 @@ export default function ManageAccountsPage() {
     );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 md:p-12 font-sans" dir={isRtl ? "rtl" : "ltr"}>
+    <div
+      className="min-h-screen bg-[#F8FAFC] p-4 md:p-12 font-sans"
+      dir={isRtl ? "rtl" : "ltr"}
+    >
       {statusMsg && (
         <div
           className={`fixed top-5 right-5 z-[100] flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border bg-white animate-in slide-in-from-top-5 duration-300 ${
@@ -222,215 +219,309 @@ export default function ManageAccountsPage() {
         </div>
       )}
 
-        <div className="max-w-6xl mx-auto">
-          <Link
-            href="/dashboard"
-            className={`flex items-center gap-2 text-slate-400 hover:text-purple-600 font-bold mb-8 transition-all group w-fit ${isRtl ? 'flex-row-reverse' : ''}`}
-          >
-            <ArrowLeft className={`w-5 h-5 transition-transform ${isRtl ? 'rotate-180 group-hover:translate-x-1' : 'group-hover:-translate-x-1'}`} />
-            {t('send.back')}
-          </Link>
+      <div className="max-w-6xl mx-auto">
+        <Link
+          href="/dashboard"
+          className={`flex items-center gap-2 text-slate-400 hover:text-purple-600 font-bold mb-8 transition-all group w-fit ${
+            isRtl ? "flex-row-reverse" : ""
+          }`}
+        >
+          <ArrowLeft
+            className={`w-5 h-5 transition-transform ${
+              isRtl
+                ? "rotate-180 group-hover:translate-x-1"
+                : "group-hover:-translate-x-1"
+            }`}
+          />
+          {t("send.back")}
+        </Link>
 
-          <header className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
-            <h1 className="text-3xl font-black text-slate-900 italic tracking-tight">
-              {t('manage.title')}
-            </h1>
-            <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border border-slate-100">
-              <button
-                onClick={() => setActiveTab("accounts")}
-                className={`px-6 py-2.5 rounded-xl font-bold transition-all ${
-                  activeTab === "accounts"
-                    ? "bg-slate-900 text-white shadow-lg"
-                    : "text-slate-400"
-                }`}
-              >
-                {t('manage.wallet')}
-              </button>
-              <button
-                onClick={() => setActiveTab("profile")}
-                className={`px-6 py-2.5 rounded-xl font-bold transition-all ${
-                  activeTab === "profile"
-                    ? "bg-slate-900 text-white shadow-lg"
-                    : "text-slate-400"
-                }`}
-              >
-                {t('manage.security')}
-              </button>
-            </div>
-          </header>
+        <header className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+          <h1 className="text-3xl font-black text-slate-900 italic tracking-tight">
+            {t("manage.title")}
+          </h1>
+          <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border border-slate-100">
+            <button
+              onClick={() => setActiveTab("accounts")}
+              className={`px-6 py-2.5 rounded-xl font-bold transition-all ${
+                activeTab === "accounts"
+                  ? "bg-slate-900 text-white shadow-lg"
+                  : "text-slate-400"
+              }`}
+            >
+              {t("manage.wallet")}
+            </button>
+            <button
+              onClick={() => setActiveTab("profile")}
+              className={`px-6 py-2.5 rounded-xl font-bold transition-all ${
+                activeTab === "profile"
+                  ? "bg-slate-900 text-white shadow-lg"
+                  : "text-slate-400"
+              }`}
+            >
+              {t("manage.security")}
+            </button>
+          </div>
+        </header>
 
-          <div className="grid lg:grid-cols-3 gap-10">
-            <div className="lg:col-span-1">
-              <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center text-center">
-                <div
-                  className="relative group cursor-pointer"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <div className="w-32 h-32 bg-purple-100 rounded-[2rem] flex items-center justify-center text-purple-600 mb-6 overflow-hidden border-4 border-slate-50 transition-all group-hover:scale-105">
-                    {user.avatar ? (
-                      <img
-                        src={`http://localhost/instapay-backend/uploads/avatars/${user.avatar}`}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                        // منع التخزين المؤقت للصورة القديمة عند التحديث
-                        key={user.avatar} 
-                      />
-                    ) : (
-                      <User className="w-16 h-16" />
-                    )}
-                    {updating && (
-                      <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
-                         <RefreshCw className="animate-spin text-purple-600" />
-                      </div>
-                    )}
-                  </div>
-                  <div className={`absolute bottom-4 ${isRtl ? 'left-0' : 'right-0'} bg-slate-900 text-white p-2 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-opacity`}>
-                    <Camera className="w-5 h-5" />
-                  </div>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                  />
+        <div className="grid lg:grid-cols-3 gap-10">
+          <div className="lg:col-span-1">
+            <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm flex flex-col items-center text-center">
+              <div
+                className="relative group cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <div className="w-32 h-32 bg-purple-100 rounded-[2rem] flex items-center justify-center text-purple-600 mb-6 overflow-hidden border-4 border-slate-50 transition-all group-hover:scale-105">
+                  {user.avatar ? (
+                    <img
+                      src={`${API_BASE_URL}/uploads/avatars/${user.avatar}`}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                      // منع التخزين المؤقت للصورة القديمة عند التحديث
+                      key={user.avatar}
+                    />
+                  ) : (
+                    <User className="w-16 h-16" />
+                  )}
+                  {updating && (
+                    <div className="absolute inset-0 bg-white/60 flex items-center justify-center">
+                      <RefreshCw className="animate-spin text-purple-600" />
+                    </div>
+                  )}
                 </div>
+                <div
+                  className={`absolute bottom-4 ${
+                    isRtl ? "left-0" : "right-0"
+                  } bg-slate-900 text-white p-2 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-opacity`}
+                >
+                  <Camera className="w-5 h-5" />
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                />
+              </div>
 
-                <h3 className="font-black text-2xl text-slate-900 mb-2">
-                  {user.full_name}
-                </h3>
-                <p className="text-slate-400 text-sm font-bold mb-6 italic">
-                  {t('manage.premium')}
-                </p>
+              <h3 className="font-black text-2xl text-slate-900 mb-2">
+                {user.full_name}
+              </h3>
+              <p className="text-slate-400 text-sm font-bold mb-6 italic">
+                {t("manage.premium")}
+              </p>
 
-                <div className="w-full space-y-3">
-                  <div className={`flex items-center gap-3 text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100/50 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                    <Smartphone className="w-5 h-5 text-purple-500" />
-                    <span className="text-sm font-black tracking-wider">
-                      {user.phone}
-                    </span>
-                  </div>
-                  <div className={`flex items-center gap-3 text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100/50 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                    <Wallet className="w-5 h-5 text-emerald-500" />
-                    <span className="text-sm font-black tracking-wider">
-                      {Number(user.balance).toLocaleString()} EGP
-                    </span>
-                  </div>
+              <div className="w-full space-y-3">
+                <div
+                  className={`flex items-center gap-3 text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100/50 ${
+                    isRtl ? "flex-row-reverse" : ""
+                  }`}
+                >
+                  <Smartphone className="w-5 h-5 text-purple-500" />
+                  <span className="text-sm font-black tracking-wider">
+                    {user.phone}
+                  </span>
+                </div>
+                <div
+                  className={`flex items-center gap-3 text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100/50 ${
+                    isRtl ? "flex-row-reverse" : ""
+                  }`}
+                >
+                  <Wallet className="w-5 h-5 text-emerald-500" />
+                  <span className="text-sm font-black tracking-wider">
+                    {Number(user.balance).toLocaleString()} EGP
+                  </span>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="lg:col-span-2">
-              {activeTab === "accounts" ? (
-                <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-white">
-                  <h2 className={`text-xl font-black text-slate-800 mb-8 ${isRtl ? 'text-right' : ''}`}>
-                    {t('manage.linked')}
-                  </h2>
-                  <div className="bg-gradient-to-br from-slate-800 to-slate-950 aspect-[1.7/1] rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
-                    <div className="relative z-10 h-full flex flex-col justify-between">
-                      <div className={`flex justify-between items-start ${isRtl ? 'flex-row-reverse' : ''}`}>
-                        <CreditCard className="w-12 h-12 opacity-50" />
-                        <span className="font-mono tracking-widest opacity-60 italic">
-                          {t('manage.cardType')}
-                        </span>
+          <div className="lg:col-span-2">
+            {activeTab === "accounts" ? (
+              <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-white">
+                <h2
+                  className={`text-xl font-black text-slate-800 mb-8 ${
+                    isRtl ? "text-right" : ""
+                  }`}
+                >
+                  {t("manage.linked")}
+                </h2>
+                <div className="bg-gradient-to-br from-slate-800 to-slate-950 aspect-[1.7/1] rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
+                  <div className="relative z-10 h-full flex flex-col justify-between">
+                    <div
+                      className={`flex justify-between items-start ${
+                        isRtl ? "flex-row-reverse" : ""
+                      }`}
+                    >
+                      <CreditCard className="w-12 h-12 opacity-50" />
+                      <span className="font-mono tracking-widest opacity-60 italic">
+                        {t("manage.cardType")}
+                      </span>
+                    </div>
+                    <div
+                      className={`text-2xl font-mono tracking-[0.3em] ${
+                        isRtl ? "text-right" : ""
+                      }`}
+                      dir="ltr"
+                    >
+                      **** **** ****{" "}
+                      {user.phone ? user.phone.slice(-4) : "0000"}
+                    </div>
+                    <div
+                      className={`flex justify-between items-end ${
+                        isRtl ? "flex-row-reverse" : ""
+                      }`}
+                    >
+                      <div className={isRtl ? "text-right" : ""}>
+                        <p className="text-[10px] opacity-40 uppercase mb-1">
+                          {t("dash.balance")}
+                        </p>
+                        <p
+                          className={`text-4xl font-black tracking-tight ${
+                            isRtl ? "flex flex-row-reverse gap-2" : ""
+                          }`}
+                        >
+                          {Number(user.balance).toLocaleString()}{" "}
+                          <span className="text-sm font-medium">EGP</span>
+                        </p>
                       </div>
-                      <div className={`text-2xl font-mono tracking-[0.3em] ${isRtl ? 'text-right' : ''}`} dir="ltr">
-                        **** **** ****{" "}
-                        {user.phone ? user.phone.slice(-4) : "0000"}
-                      </div>
-                      <div className={`flex justify-between items-end ${isRtl ? 'flex-row-reverse' : ''}`}>
-                        <div className={isRtl ? 'text-right' : ''}>
-                          <p className="text-[10px] opacity-40 uppercase mb-1">
-                            {t('dash.balance')}
-                          </p>
-                          <p className={`text-4xl font-black tracking-tight ${isRtl ? 'flex flex-row-reverse gap-2' : ''}`}>
-                            {Number(user.balance).toLocaleString()}{" "}
-                            <span className="text-sm font-medium">EGP</span>
-                          </p>
-                        </div>
-                        <div className="w-14 h-10 bg-white/10 backdrop-blur-md rounded-lg border border-white/10"></div>
-                      </div>
+                      <div className="w-14 h-10 bg-white/10 backdrop-blur-md rounded-lg border border-white/10"></div>
                     </div>
                   </div>
                 </div>
-              ) : (
-                <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-white">
-                  <div className="space-y-8">
-                    <section>
-                      <h3 className={`text-sm font-black text-slate-400 uppercase mb-4 tracking-widest ${isRtl ? 'text-right' : ''}`}>
-                        {t('manage.fullName')}
-                      </h3>
-                      <div className={`flex gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
-                        <div className={`flex-1 bg-slate-50 border border-slate-100 p-4 rounded-2xl focus-within:bg-white transition-all flex items-center ${isRtl ? 'flex-row-reverse' : ''}`}>
-                          <User className={`w-5 h-5 text-slate-300 ${isRtl ? 'ml-3' : 'mr-3'}`} />
-                          <input
-                            type="text"
-                            value={newName}
-                            onChange={(e) => setNewName(e.target.value)}
-                            className={`bg-transparent w-full outline-none font-bold text-slate-700 ${isRtl ? 'text-right' : ''}`}
-                          />
-                        </div>
-                        <button
-                          onClick={handleUpdateName}
-                          disabled={updating}
-                          className="bg-slate-900 text-white px-8 rounded-2xl font-bold hover:bg-purple-600 transition-all disabled:opacity-50"
-                        >
-                          {updating ? t('manage.saving') : t('manage.save')}
-                        </button>
-                      </div>
-                    </section>
-
-                    <section className="space-y-4">
-                      <h3 className={`text-sm font-black text-slate-400 uppercase mb-4 tracking-widest ${isRtl ? 'text-right' : ''}`}>
-                        {t('manage.secUpdate')}
-                      </h3>
-                      <div className={`relative bg-slate-50 border border-slate-100 p-4 rounded-2xl focus-within:bg-white transition-all flex items-center ${isRtl ? 'flex-row-reverse' : ''}`}>
-                        <Lock className={`w-5 h-5 text-slate-300 ${isRtl ? 'ml-3' : 'mr-3'}`} />
-                        <input
-                          type={showOldPass ? "text" : "password"}
-                          placeholder={t('manage.currPass')}
-                          value={oldPassword}
-                          onChange={(e) => setOldPassword(e.target.value)}
-                          className={`bg-transparent w-full outline-none font-bold text-slate-700 ${isRtl ? 'pl-10 text-right' : 'pr-10'}`}
+              </div>
+            ) : (
+              <div className="bg-white p-10 rounded-[2.5rem] shadow-xl border border-white">
+                <div className="space-y-8">
+                  <section>
+                    <h3
+                      className={`text-sm font-black text-slate-400 uppercase mb-4 tracking-widest ${
+                        isRtl ? "text-right" : ""
+                      }`}
+                    >
+                      {t("manage.fullName")}
+                    </h3>
+                    <div
+                      className={`flex gap-3 ${
+                        isRtl ? "flex-row-reverse" : ""
+                      }`}
+                    >
+                      <div
+                        className={`flex-1 bg-slate-50 border border-slate-100 p-4 rounded-2xl focus-within:bg-white transition-all flex items-center ${
+                          isRtl ? "flex-row-reverse" : ""
+                        }`}
+                      >
+                        <User
+                          className={`w-5 h-5 text-slate-300 ${
+                            isRtl ? "ml-3" : "mr-3"
+                          }`}
                         />
-                        <button
-                          onClick={() => setShowOldPass(!showOldPass)}
-                          className={`absolute ${isRtl ? 'left-4' : 'right-4'} text-slate-400`}
-                        >
-                          {showOldPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                        </button>
-                      </div>
-                      <div className={`relative bg-slate-50 border border-slate-100 p-4 rounded-2xl focus-within:bg-white transition-all flex items-center ${isRtl ? 'flex-row-reverse' : ''}`}>
-                        <ShieldCheck className={`w-5 h-5 text-slate-300 ${isRtl ? 'ml-3' : 'mr-3'}`} />
                         <input
-                          type={showNewPass ? "text" : "password"}
-                          placeholder={t('manage.newPass')}
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          className={`bg-transparent w-full outline-none font-bold text-slate-700 ${isRtl ? 'pl-10 text-right' : 'pr-10'}`}
+                          type="text"
+                          value={newName}
+                          onChange={(e) => setNewName(e.target.value)}
+                          className={`bg-transparent w-full outline-none font-bold text-slate-700 ${
+                            isRtl ? "text-right" : ""
+                          }`}
                         />
-                        <button
-                          onClick={() => setShowNewPass(!showNewPass)}
-                          className={`absolute ${isRtl ? 'left-4' : 'right-4'} text-slate-400`}
-                        >
-                          {showNewPass ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                        </button>
                       </div>
                       <button
-                        onClick={handleChangePassword}
+                        onClick={handleUpdateName}
                         disabled={updating}
-                        className="w-full bg-purple-600 text-white py-4 rounded-2xl font-black shadow-lg hover:shadow-purple-100 transition-all disabled:opacity-50"
+                        className="bg-slate-900 text-white px-8 rounded-2xl font-bold hover:bg-purple-600 transition-all disabled:opacity-50"
                       >
-                        {updating ? t('manage.updating') : t('manage.updatePass')}
+                        {updating ? t("manage.saving") : t("manage.save")}
                       </button>
-                    </section>
-                  </div>
+                    </div>
+                  </section>
+
+                  <section className="space-y-4">
+                    <h3
+                      className={`text-sm font-black text-slate-400 uppercase mb-4 tracking-widest ${
+                        isRtl ? "text-right" : ""
+                      }`}
+                    >
+                      {t("manage.secUpdate")}
+                    </h3>
+                    <div
+                      className={`relative bg-slate-50 border border-slate-100 p-4 rounded-2xl focus-within:bg-white transition-all flex items-center ${
+                        isRtl ? "flex-row-reverse" : ""
+                      }`}
+                    >
+                      <Lock
+                        className={`w-5 h-5 text-slate-300 ${
+                          isRtl ? "ml-3" : "mr-3"
+                        }`}
+                      />
+                      <input
+                        type={showOldPass ? "text" : "password"}
+                        placeholder={t("manage.currPass")}
+                        value={oldPassword}
+                        onChange={(e) => setOldPassword(e.target.value)}
+                        className={`bg-transparent w-full outline-none font-bold text-slate-700 ${
+                          isRtl ? "pl-10 text-right" : "pr-10"
+                        }`}
+                      />
+                      <button
+                        onClick={() => setShowOldPass(!showOldPass)}
+                        className={`absolute ${
+                          isRtl ? "left-4" : "right-4"
+                        } text-slate-400`}
+                      >
+                        {showOldPass ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                    <div
+                      className={`relative bg-slate-50 border border-slate-100 p-4 rounded-2xl focus-within:bg-white transition-all flex items-center ${
+                        isRtl ? "flex-row-reverse" : ""
+                      }`}
+                    >
+                      <ShieldCheck
+                        className={`w-5 h-5 text-slate-300 ${
+                          isRtl ? "ml-3" : "mr-3"
+                        }`}
+                      />
+                      <input
+                        type={showNewPass ? "text" : "password"}
+                        placeholder={t("manage.newPass")}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        className={`bg-transparent w-full outline-none font-bold text-slate-700 ${
+                          isRtl ? "pl-10 text-right" : "pr-10"
+                        }`}
+                      />
+                      <button
+                        onClick={() => setShowNewPass(!showNewPass)}
+                        className={`absolute ${
+                          isRtl ? "left-4" : "right-4"
+                        } text-slate-400`}
+                      >
+                        {showNewPass ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
+                    <button
+                      onClick={handleChangePassword}
+                      disabled={updating}
+                      className="w-full bg-purple-600 text-white py-4 rounded-2xl font-black shadow-lg hover:shadow-purple-100 transition-all disabled:opacity-50"
+                    >
+                      {updating ? t("manage.updating") : t("manage.updatePass")}
+                    </button>
+                  </section>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
-
+      </div>
     </div>
   );
 }

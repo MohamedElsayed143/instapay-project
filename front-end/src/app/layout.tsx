@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { VisualEditsMessenger } from "orchids-visual-edits";
 import { LanguageProvider } from "@/hooks/use-language";
 
 export const metadata: Metadata = {
@@ -20,7 +19,7 @@ export default function RootLayout({
         <LanguageProvider>
           {children}
         </LanguageProvider>
-        <VisualEditsMessenger />
+
       </body>
     </html>
   );
