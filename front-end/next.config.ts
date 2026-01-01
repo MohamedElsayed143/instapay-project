@@ -1,10 +1,10 @@
 import type { NextConfig } from "next";
 import path from "node:path";
 
-// Loader path from orchids-visual-edits - use direct resolve to get the actual file
-const loaderPath = require.resolve('orchids-visual-edits/loader.js');
-
 const nextConfig: NextConfig = {
+  // تفعيل الـ Standalone Mode يحل مشكلة ملفات التشغيل الناقصة في Vercel
+  output: 'standalone', 
+  
   images: {
     remotePatterns: [
       {
@@ -17,20 +17,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  outputFileTracingRoot: path.resolve(__dirname, '../../'),
+
+  // تم حذف سطر outputFileTracingRoot القديم لأنه كان يسبب أخطاء في المسارات
+  // واستبداله بضبط المسار الصحيح للمجلد الحالي فقط
+  outputFileTracingRoot: path.resolve(__dirname),
+
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
-  turbopack: {
-    rules: {
-      "*.{jsx,tsx}": {
-        loaders: [loaderPath]
-      }
-    }
-  }
-} as NextConfig;
+  
+  // ملحوظة: إذا استمر الخطأ، يفضل تعطيل Turbopack في الـ Build 
+  // لأن بعض الـ Loaders الخارجية قد لا تدعمه بشكل مستقر في الإنتاج
+};
 
 export default nextConfig;
