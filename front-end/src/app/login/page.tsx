@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/utils";
 import { useLanguage } from "@/hooks/use-language";
 import {
   Eye,
@@ -34,8 +35,6 @@ const Login = () => {
     setMessage({ text: "", isError: false });
   }, [isLoginMode]);
 
-  const API_BASE_URL = "${API_BASE_URL}/auth";
-
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPhone(e.target.value.replace(/\D/g, ""));
   };
@@ -44,7 +43,7 @@ const Login = () => {
     setLoading(true);
     setMessage({ text: "", isError: false });
 
-    const endpoint = isLoginMode ? "/login.php" : "/signup.php";
+    const endpoint = isLoginMode ? "/auth/login.php" : "/auth/signup.php";
     const payload = isLoginMode
       ? { phone, password }
       : { fullName, phone, password };
