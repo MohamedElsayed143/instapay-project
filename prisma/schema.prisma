@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  user
+  admin
+}
+
+enum TransactionType {
+  bill
+  transfer
+  receive
+}
+
+enum RequestStatus {
+  pending
+  accepted
+  rejected
+}
+
+enum ServiceType {
+  electricity
+  water
+  mobile
+  internet
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  fullName  String?   @map("full_name")
+  phone     String?   @unique
+  password  String?
+  createdAt DateTime  @default(now()) @map("created_at")
+  balance   Decimal   @default(5000) @db.Decimal(10, 2)
+  deletedAt DateTime? @map("deleted_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  avatar    String?
+  role      Role      @default(user)
+
+  sentTransactions Transaction[]  @relation("SentTransactions")
+  recvTransactions Transaction[]  @relation("RecvTransactions")
+  notifications    Notification[]
+  paymentRequests  PaymentRequest[]
+  billPayments     BillPayment[]
+
+  @@map("users")
+}
+
+model Transaction {
+  id               Int             @id @default(autoincrement())
+  senderId         Int?            @map("sender_id")
+  receiverId       Int?            @map("receiver_id")
+  receiverPhone    String          @map("receiver_phone")
+  userId           Int             @map("user_id")
+  type             TransactionType
+  serviceName      String?         @map("service_name")
+  amount           Decimal         @db.Decimal(10, 2)
+  accountReference String?         @map("account_reference")
+  createdAt        DateTime        @default(now()) @map("created_at")
+
+  sender   User? @relation("SentTransactions", fields: [senderId], references: [id])
+  receiver User? @relation("RecvTransactions", fields: [receiverId], references: [id])
+
+  @@map("transactions")
+}
+
+model Notification {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  title       String
+  description String?
+  amount      String?
+  type        String   @default("transaction")
+  isRead      Boolean  @default(false) @map("is_read")
+  createdAt   DateTime @default(now()) @map("created_at")
+  requestId   Int?     @map("request_id")
+
+  user    User            @relation(fields: [userId], references: [id])
+  request PaymentRequest? @relation(fields: [requestId], references: [id])
+
+  @@map("notifications")
+}
+
+model PaymentRequest {
+  id          Int           @id @default(autoincrement())
+  requesterId Int           @map("requester_id")
+  payerPhone  String        @map("payer_phone")
+  amount      Decimal       @db.Decimal(10, 2)
+  status      RequestStatus @default(pending)
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  requester     User           @relation(fields: [requesterId], references: [id])
+  notifications Notification[]
+
+  @@map("payment_requests")
+}
+
+model BillPayment {
+  id            Int      @id @default(autoincrement())
+  userId        Int      @map("user_id")
+  serviceType   String   @map("service_type")
+  accountNumber String   @map("account_number")
+  amount        Decimal  @db.Decimal(10, 2)
+  paymentDate   DateTime @default(now()) @map("payment_date")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("bill_payments")
+}
